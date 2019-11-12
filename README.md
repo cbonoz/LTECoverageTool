@@ -1,3 +1,15 @@
+Guided Map LTE Coverage
+--
+
+* Submitted going after techotoprotect challenge #4.
+
+3 new map modes:
+* Mode 1: Heat map using GPS allowing user to move and visualize LTE connectivity along the travelled route.
+* Mode 2: Heat map without GPS (using localized network provider) to present data on a map.
+* Mode 3: Heat map without GPS overlaid on an image or floor plan uploaded by a user. User can click where he she started and correct the route as needed.
+
+--- Original project readme
+
 # LTE Coverage Tool
 
 ## PURPOSE
