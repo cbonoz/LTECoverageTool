@@ -392,10 +392,6 @@ public abstract class RecordActivity extends AppCompatActivity{
         mRecordingImage.startAnimation(mRecordingImageAnimation);
     }
 
-    private int test = 0;
-    List<Feature> geoJson = new ArrayList<Feature>();
-    List<LineLayer> lineLayer = new ArrayList<LineLayer>();
-
     private class SignalStrengthListener extends PhoneStateListener {
 
         @Override
@@ -438,10 +434,28 @@ public abstract class RecordActivity extends AppCompatActivity{
                     tmp.setLongitude(lastLng);
                     mapboxMap.getLocationComponent().forceLocationUpdate(tmp);
 
-                    routeCoordinates.add(Point.fromLngLat(lastLng, lastLat+ 0.01*count));
+                    routeCoordinates.add(Point.fromLngLat(lastLng, lastLat));
                     count++;
                     if(routeCoordinates.size() > 2 && rawFeature != null && rawFeature.has("features"))
                     {
+                        String grade = "";
+                        if (mDataReadings != null) {
+                            for (DataReading dataReading : mDataReadings) {
+                                if (rsrp >= -95) {
+                                    grade = "top";
+                                }
+                                else if (rsrp < -95 && rsrp >= -103) {
+                                    grade = "middlelow";
+                                }
+                                else if (rsrp < -103 && rsrp >= -110) {
+                                    grade = "middle";
+                                }
+                                else {
+                                    grade = "low";
+                                }
+                            }
+                        }
+                        String finalGrade = grade;
                         mapboxMap.setStyle(Style.OUTDOORS,
                                 new Style.OnStyleLoaded() {
                                     @Override public void onStyleLoaded(@NonNull Style style) {
@@ -451,7 +465,7 @@ public abstract class RecordActivity extends AppCompatActivity{
                                         try {
                                             tmp.put("type","Feature");
                                             JSONObject color = new JSONObject();
-                                            color.put("color", "top");
+                                            color.put("color", finalGrade);
                                             tmp.put("properties", color);
 
                                             JSONObject geometry = new JSONObject();
@@ -477,7 +491,6 @@ public abstract class RecordActivity extends AppCompatActivity{
 
 
                                         style.addSource(new GeoJsonSource("lines", rawFeature.toString()));
-                                        
                                         style.addLayer(new LineLayer("finalLines", "lines").withProperties(
                                                 PropertyFactory.lineColor(
                                                         match(
