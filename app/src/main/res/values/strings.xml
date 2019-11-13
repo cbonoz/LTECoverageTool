@@ -114,6 +114,11 @@
     <string name="fragment_grade_pie_chart_label_top">Excellent</string>
     <string name="fragment_grade_pie_chart_label_mid">Good</string>
     <string name="fragment_grade_pie_chart_label_low">Poor</string>
+    <string name="access_token"></string>
+    <string name="bad_offset_value">Error reading offset value, please enter another value</string>
+    <string name="your_trip">Your trip</string>
+    <string name="confirm">Confirm</string>
+    <string name="select_mode">Select Mode</string>
 
 
 </resources>

@@ -53,7 +53,7 @@ import java.util.TimerTask;
 
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 
-public class RecordActivity extends AppCompatActivity {
+public abstract class RecordActivity extends AppCompatActivity {
 
     public static final String DATA_READINGS_KEY = "data_readings_key";
     public static final String OFFSET_KEY = "offset_key";
@@ -75,7 +75,6 @@ public class RecordActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_record);
 
         mCurrentReading = new DataReading();
         mDataReadings = new ArrayList<>();
@@ -259,7 +258,7 @@ public class RecordActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         AlertDialog alert = new AlertDialog.Builder(this)
-                .setTitle("Confirm")
+                .setTitle(R.string.confirm)
                 .setMessage("Do you want to cancel recording? All data will be lost.")
                 .setPositiveButton("YES", (dialog, which) -> finish())
                 .setNegativeButton("NO", (dialog, which) -> dialog.dismiss())
