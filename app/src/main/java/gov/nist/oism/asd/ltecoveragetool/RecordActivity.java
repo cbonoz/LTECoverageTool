@@ -17,6 +17,7 @@
 package gov.nist.oism.asd.ltecoveragetool;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -50,12 +51,21 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mapbox.android.core.location.LocationEngineProvider;
+import com.mapbox.android.core.location.LocationEngineRequest;
+import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
+import com.mapbox.mapboxsdk.location.modes.CameraMode;
+import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.maps.Style;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +80,7 @@ import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
 /*
  * Base activity for map-based signal strength recording.
  */
-public abstract class RecordActivity extends AppCompatActivity {
+public abstract class RecordActivity extends AppCompatActivity{
 
     public static final String DATA_READINGS_KEY = "data_readings_key";
     public static final String OFFSET_KEY = "offset_key";
@@ -104,6 +114,7 @@ public abstract class RecordActivity extends AppCompatActivity {
     private Timer mTimer;
     private List<DataReading> mDataReadings;
 
+    private PermissionsManager permissionsManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -386,6 +397,14 @@ public abstract class RecordActivity extends AppCompatActivity {
                     mCurrentReading.setAcc(lastAcc);
                 }
                 LteLog.i(TAG, String.format(Locale.getDefault(), "rsrp: %d, rsrq: %d", rsrp, rsrq));
+                if(mapboxMap != null)
+                {
+                    Location tmp = new Location("");
+                    tmp.setLatitude(lastLat);
+                    tmp.setLongitude(lastLng);
+                    mapboxMap.getLocationComponent().forceLocationUpdate(tmp);
+                }
+
             }
 //            }
 
@@ -406,4 +425,5 @@ public abstract class RecordActivity extends AppCompatActivity {
                 .build();
         mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), 5000);
     }
+
 }

@@ -1,5 +1,6 @@
 package gov.nist.oism.asd.ltecoveragetool.maps;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
@@ -8,10 +9,17 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 
+import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.LineString;
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
+import com.mapbox.mapboxsdk.location.modes.CameraMode;
+import com.mapbox.mapboxsdk.location.modes.RenderMode;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
@@ -30,7 +38,7 @@ import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
  * Add a GeoJSON line to a map.
  * Used for both modes 1 and 2.
  */
-public class GpsLineLayerActivity extends RecordActivity implements LocationListener {
+public class GpsLineLayerActivity extends RecordActivity  implements OnMapReadyCallback, LocationListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,28 +55,7 @@ public class GpsLineLayerActivity extends RecordActivity implements LocationList
         // This contains the MapView in XML and needs to be called after the access token is configured.
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(mapboxMap -> mapboxMap.setStyle(Style.OUTDOORS, style -> {
-            this.mapboxMap = mapboxMap;
-
-            initRouteCoordinates();
-
-            // Create the LineString from the list of coordinates and then make a GeoJSON
-            // FeatureCollection so we can add the line to our map as a layer.
-            style.addSource(new GeoJsonSource("line-source",
-                    FeatureCollection.fromFeatures(new Feature[]{Feature.fromGeometry(
-                            LineString.fromLngLats(routeCoordinates)
-                    )})));
-
-            // The layer properties for our line. This is where we make the line dotted, set the
-            // color, etc.
-            style.addLayer(new LineLayer("linelayer", "line-source").withProperties(
-                    PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
-                    PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
-                    PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
-                    PropertyFactory.lineWidth(5f),
-                    PropertyFactory.lineColor(Color.parseColor("#e55e5e"))
-            ));
-        }));
+        mapView.getMapAsync(this);
     }
 
 
@@ -140,6 +127,8 @@ public class GpsLineLayerActivity extends RecordActivity implements LocationList
         lastLat = location.getLatitude();
         lastLng = location.getLongitude();
         LteLog.d("loc", String.format(Locale.US, "%f, %f", lastLat, lastLng));
+        this.mapboxMap.getLocationComponent().forceLocationUpdate(location);
+
     }
 
     @Override
@@ -155,5 +144,86 @@ public class GpsLineLayerActivity extends RecordActivity implements LocationList
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
         Log.d("Latitude","status");
+    }
+
+
+    @Override
+    public void onMapReady(@NonNull final MapboxMap mapboxMap) {
+        this.mapboxMap = mapboxMap;
+
+        /*
+        this.mapboxMap -> mapboxMap.setStyle(Style.OUTDOORS, style -> {
+            this.mapboxMap = mapboxMap;
+
+            initRouteCoordinates();
+
+            // Create the LineString from the list of coordinates and then make a GeoJSON
+            // FeatureCollection so we can add the line to our map as a layer.
+
+        })*/
+
+        mapboxMap.setStyle(Style.OUTDOORS,
+                new Style.OnStyleLoaded() {
+                    @Override public void onStyleLoaded(@NonNull Style style) {
+
+                        initRouteCoordinates();
+                        style.addSource(new GeoJsonSource("line-source",
+                                FeatureCollection.fromFeatures(new Feature[]{Feature.fromGeometry(
+                                        LineString.fromLngLats(routeCoordinates)
+                                )})));
+
+                        // The layer properties for our line. This is where we make the line dotted, set the
+                        // color, etc.
+                        style.addLayer(new LineLayer("linelayer", "line-source").withProperties(
+                                PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
+                                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+                                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+                                PropertyFactory.lineWidth(5f),
+                                PropertyFactory.lineColor(Color.parseColor("#e55e5e"))
+                        ));
+                        enableLocationComponent(style);
+                    }
+                });
+    }
+
+    /**
+     * Initialize the Maps SDK's LocationComponent
+     */
+    @SuppressWarnings( {"MissingPermission"})
+    private void enableLocationComponent(@NonNull Style loadedMapStyle) {
+        // Check if permissions are enabled and if not request
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+
+            // Get an instance of the component
+            LocationComponent locationComponent = mapboxMap.getLocationComponent();
+
+            // Set the LocationComponent activation options
+            LocationComponentActivationOptions locationComponentActivationOptions =
+                    LocationComponentActivationOptions.builder(this, loadedMapStyle)
+                            .useDefaultLocationEngine(false)
+                            .build();
+
+            // Activate with the LocationComponentActivationOptions object
+            locationComponent.activateLocationComponent(locationComponentActivationOptions);
+
+            // Enable to make component visible
+            locationComponent.setLocationComponentEnabled(true);
+
+            // Set the component's camera mode
+            locationComponent.setCameraMode(CameraMode.TRACKING);
+
+            // Set the component's render mode
+            locationComponent.setRenderMode(RenderMode.COMPASS);
+
+            initLocationEngine();
+        }
+    }
+
+    /**
+     * Set up the LocationEngine and the parameters for querying the device's location
+     */
+    @SuppressLint("MissingPermission")
+    private void initLocationEngine() {
+
     }
 }
