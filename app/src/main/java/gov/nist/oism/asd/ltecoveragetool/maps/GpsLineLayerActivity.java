@@ -127,7 +127,7 @@ public class GpsLineLayerActivity extends RecordActivity  implements OnMapReadyC
         lastLat = location.getLatitude();
         lastLng = location.getLongitude();
         LteLog.d("loc", String.format(Locale.US, "%f, %f", lastLat, lastLng));
-        this.mapboxMap.getLocationComponent().forceLocationUpdate(location);
+        //this.mapboxMap.getLocationComponent().forceLocationUpdate(location);
 
     }
 
@@ -165,21 +165,39 @@ public class GpsLineLayerActivity extends RecordActivity  implements OnMapReadyC
         mapboxMap.setStyle(Style.OUTDOORS,
                 new Style.OnStyleLoaded() {
                     @Override public void onStyleLoaded(@NonNull Style style) {
-
+                        mapstyle = style;
                         initRouteCoordinates();
+
                         style.addSource(new GeoJsonSource("line-source",
                                 FeatureCollection.fromFeatures(new Feature[]{Feature.fromGeometry(
                                         LineString.fromLngLats(routeCoordinates)
                                 )})));
 
+
                         // The layer properties for our line. This is where we make the line dotted, set the
                         // color, etc.
-                        style.addLayer(new LineLayer("linelayer", "line-source").withProperties(
-                                PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
+                        style.addLayer(new LineLayer("high", "line-source").withProperties(
+                                //PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
                                 PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
                                 PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
                                 PropertyFactory.lineWidth(5f),
-                                PropertyFactory.lineColor(Color.parseColor("#e55e5e"))
+                                PropertyFactory.lineColor(Color.parseColor("#00FF00"))
+                        ));
+
+                        style.addLayer(new LineLayer("mid", "line-source").withProperties(
+                                //PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
+                                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+                                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+                                PropertyFactory.lineWidth(5f),
+                                PropertyFactory.lineColor(Color.parseColor("#FFFF00"))
+                        ));
+
+                        style.addLayer(new LineLayer("low", "line-source").withProperties(
+                                //PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
+                                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+                                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+                                PropertyFactory.lineWidth(5f),
+                                PropertyFactory.lineColor(Color.parseColor("#FF0000"))
                         ));
                         enableLocationComponent(style);
                     }

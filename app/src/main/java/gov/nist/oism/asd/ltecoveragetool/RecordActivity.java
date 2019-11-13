@@ -21,6 +21,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -54,6 +55,9 @@ import android.widget.Toast;
 import com.mapbox.android.core.location.LocationEngineProvider;
 import com.mapbox.android.core.location.LocationEngineRequest;
 import com.mapbox.android.core.permissions.PermissionsManager;
+import com.mapbox.geojson.Feature;
+import com.mapbox.geojson.FeatureCollection;
+import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -66,13 +70,25 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.style.layers.LineLayer;
+import com.mapbox.mapboxsdk.style.layers.Property;
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
-
+import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.match;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.rgb;
+import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
@@ -95,6 +111,7 @@ public abstract class RecordActivity extends AppCompatActivity{
 
     protected MapboxMap mapboxMap;
     protected boolean setInitialPosition;
+    public Style mapstyle;
 
     protected LocationManager locationManager;
     protected LocationListener locationListener;
@@ -115,6 +132,10 @@ public abstract class RecordActivity extends AppCompatActivity{
     private List<DataReading> mDataReadings;
 
     private PermissionsManager permissionsManager;
+    int count = 0;
+
+    public JSONObject rawFeature;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,6 +143,13 @@ public abstract class RecordActivity extends AppCompatActivity{
 
         setupLocation();
 
+
+        try {
+            rawFeature = new JSONObject("{\"type\":\"FeatureCollection\",\"features\":[]}");
+        } catch (
+                JSONException e) {
+            e.printStackTrace();
+        }
         mCurrentReading = new DataReading();
         mDataReadings = new ArrayList<>();
 
@@ -364,6 +392,10 @@ public abstract class RecordActivity extends AppCompatActivity{
         mRecordingImage.startAnimation(mRecordingImageAnimation);
     }
 
+    private int test = 0;
+    List<Feature> geoJson = new ArrayList<Feature>();
+    List<LineLayer> lineLayer = new ArrayList<LineLayer>();
+
     private class SignalStrengthListener extends PhoneStateListener {
 
         @Override
@@ -396,18 +428,77 @@ public abstract class RecordActivity extends AppCompatActivity{
                     mCurrentReading.setLng(lastLng);
                     mCurrentReading.setAcc(lastAcc);
                 }
+
                 LteLog.i(TAG, String.format(Locale.getDefault(), "rsrp: %d, rsrq: %d", rsrp, rsrq));
+
                 if(mapboxMap != null)
                 {
                     Location tmp = new Location("");
                     tmp.setLatitude(lastLat);
                     tmp.setLongitude(lastLng);
                     mapboxMap.getLocationComponent().forceLocationUpdate(tmp);
+
+                    routeCoordinates.add(Point.fromLngLat(lastLng, lastLat+ 0.01*count));
+                    count++;
+                    if(routeCoordinates.size() > 2 && rawFeature != null && rawFeature.has("features"))
+                    {
+                        mapboxMap.setStyle(Style.OUTDOORS,
+                                new Style.OnStyleLoaded() {
+                                    @Override public void onStyleLoaded(@NonNull Style style) {
+                                        // Retrieve GeoJSON from local file and add it to the map
+
+                                        JSONObject tmp = new JSONObject();
+                                        try {
+                                            tmp.put("type","Feature");
+                                            JSONObject color = new JSONObject();
+                                            color.put("color", "top");
+                                            tmp.put("properties", color);
+
+                                            JSONObject geometry = new JSONObject();
+                                            JSONArray coordinates = new JSONArray();
+
+                                            for(int i = 0; i < routeCoordinates.size(); i++)
+                                            {
+                                                JSONArray coordinate = new JSONArray();
+                                                coordinate.put(routeCoordinates.get(i).longitude());
+                                                coordinate.put(routeCoordinates.get(i).latitude());
+                                                coordinates.put(coordinate);
+                                            }
+
+                                            geometry.put("type", "LineString");
+                                            geometry.put("coordinates", coordinates);
+                                            tmp.put("geometry", geometry);
+
+                                            rawFeature.getJSONArray("features").put(tmp);
+
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+
+
+                                        style.addSource(new GeoJsonSource("lines", rawFeature.toString()));
+                                        
+                                        style.addLayer(new LineLayer("finalLines", "lines").withProperties(
+                                                PropertyFactory.lineColor(
+                                                        match(
+                                                                get("color"), rgb(0, 0, 0),
+                                                                stop("top", rgb(0, 255, 0)),
+                                                                stop("middle", rgb(255, 255, 0)),
+                                                                stop("middlelow", rgb(255, 103, 1)),
+                                                                stop("low", rgb(255, 0, 0))
+                                                        )),
+                                                PropertyFactory.visibility(Property.VISIBLE),
+                                                PropertyFactory.lineWidth(3f)
+                                        ));
+                                        routeCoordinates.clear();
+                                    }
+                                });
+                    }
+                    //mapboxMap.setStyle();
                 }
 
             }
 //            }
-
             super.onSignalStrengthsChanged(signalStrength);
         }
     }
