@@ -40,6 +40,7 @@ import android.text.SpannableString;
 import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -357,10 +358,12 @@ public abstract class RecordActivity extends AppCompatActivity {
         @Override
         public void onSignalStrengthsChanged(SignalStrength signalStrength) {
             LteLog.i(TAG, "onSignalStrengthsChanged: " + signalStrength.toString());
-            String[] values = signalStrength.toString().split(" ");
-            if (values.length > 12) {
-                int rsrp = Integer.parseInt(values[9]);
-                int rsrq = Integer.parseInt(values[10]);
+            //String[] values = signalStrength.toString().split(" ");
+//            if (values.length > 12) {
+            String temp = signalStrength.toString();
+            if(temp.contains("rsrp=") && temp.contains("rsrq=")) {
+                int rsrp = Integer.parseInt(temp.substring(temp.indexOf("rsrp=") + 5,temp.indexOf(" ", temp.indexOf("rsrp=") + 5)));
+                int rsrq = Integer.parseInt(temp.substring(temp.indexOf("rsrq=") + 5,temp.indexOf(" ", temp.indexOf("rsrq=") + 5)));
                 synchronized (MUTEX) {
                     mCurrentReading.setRsrp(rsrp);
                     mCurrentReading.setRsrq(rsrq);
@@ -384,6 +387,7 @@ public abstract class RecordActivity extends AppCompatActivity {
                 }
                 LteLog.i(TAG, String.format(Locale.getDefault(), "rsrp: %d, rsrq: %d", rsrp, rsrq));
             }
+//            }
 
             super.onSignalStrengthsChanged(signalStrength);
         }
