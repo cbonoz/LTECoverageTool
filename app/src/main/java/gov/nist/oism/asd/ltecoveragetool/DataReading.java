@@ -33,12 +33,18 @@ class DataReading implements Serializable {
     private int rsrp;
     private int rsrq;
     private int pci;
+    private double lat;
+    private double lng;
+    private double acc;
 
     DataReading() {
         this.timestamp = new Date();
         this.rsrp = UNAVAILABLE;
         this.rsrq = UNAVAILABLE;
         this.pci = PCI_NA;
+        this.acc = -1;
+        this.lat = -1;
+        this.lng = -1;
     }
 
     DataReading(DataReading dataReading) {
@@ -46,6 +52,8 @@ class DataReading implements Serializable {
         this.rsrp = dataReading.rsrp;
         this.rsrq = dataReading.rsrq;
         this.pci = dataReading.pci;
+        this.lng = dataReading.lng;
+        this.lat = dataReading.lat;
     }
 
     Date getTimestamp() {
@@ -74,5 +82,29 @@ class DataReading implements Serializable {
 
     void setPci(int pci) {
         this.pci = pci;
+    }
+
+    public void setLat(double lastLat) {
+        this.lat = lastLat;
+    }
+
+    double getLat() {
+        return lat;
+    }
+
+    public void setLng(double lastLng) {
+        this.lng = lastLng;
+    }
+
+    double getLng() {
+        return lng;
+    }
+
+    public void setAcc(double lastAcc) {
+        this.acc = lastAcc;
+    }
+
+    double getAcc() {
+        return acc;
     }
 }

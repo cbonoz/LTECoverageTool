@@ -20,6 +20,9 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -45,6 +48,13 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.mapbox.geojson.Point;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
+import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.maps.MapView;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -53,6 +63,8 @@ import java.util.TimerTask;
 
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 
+import static gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity.GPS_OPTION;
+
 public abstract class RecordActivity extends AppCompatActivity {
 
     public static final String DATA_READINGS_KEY = "data_readings_key";
@@ -60,6 +72,21 @@ public abstract class RecordActivity extends AppCompatActivity {
 
     private static final String TAG = RecordActivity.class.getSimpleName();
     private static final Object MUTEX = new Object();
+    private static final long SAMPLE_RATE = 2000; // ms
+    protected static String RECORD_TYPE;
+
+    protected MapView mapView;
+    protected List<Point> routeCoordinates;
+
+    protected MapboxMap mapboxMap;
+    protected boolean setInitialPosition;
+
+    protected LocationManager locationManager;
+    protected LocationListener locationListener;
+
+    protected double lastLat = 0;
+    protected double lastLng = 0;
+    protected double lastAcc;
 
     private Button mPauseRecordButton;
     private ImageView mRecordingImage;
@@ -159,10 +186,9 @@ public abstract class RecordActivity extends AppCompatActivity {
                                         dataReadingCopy.setRsrp(signalStrengthLte.getRsrp());
                                         dataReadingCopy.setRsrq(signalStrengthLte.getRsrq());
                                         LteLog.i(TAG, "(VERSION >= 26) rsrp: " + signalStrengthLte.getRsrp() + ", rsrq: " + signalStrengthLte.getRsrq());
-                                    }
-                                    else {
+                                    } else {
                                         dataReadingCopy.setRsrp(signalStrengthLte.getDbm()); // dbm = rsrp for values less than build 26.
-                                        LteLog.i(TAG, String.format(Locale.getDefault(),"(VERSION < 26) rsrp: %d", signalStrengthLte.getDbm()));
+                                        LteLog.i(TAG, String.format(Locale.getDefault(), "(VERSION < 26) rsrp: %d", signalStrengthLte.getDbm()));
                                     }
 
                                     // Now get the pci.
@@ -178,16 +204,14 @@ public abstract class RecordActivity extends AppCompatActivity {
                             }
                         }
                     }
-                }
-                catch (Exception caught) {
+                } catch (Exception caught) {
                     LteLog.e(TAG, caught.getMessage(), caught);
                 }
 
                 // Adjust the rsrp;
                 if (dataReadingCopy.getRsrp() == DataReading.UNAVAILABLE) {
                     dataReadingCopy.setRsrp(DataReading.LOW_RSRP);
-                }
-                else {
+                } else {
                     dataReadingCopy.setRsrp(dataReadingCopy.getRsrp() + (int) mOffset);
                 }
 
@@ -207,25 +231,22 @@ public abstract class RecordActivity extends AppCompatActivity {
                     if (isRecording()) {
                         if (dataReadingCopy.getRsrp() >= DataReading.EXECELLENT_RSRP_THRESHOLD) {
                             mSignalStrengthText.setText(getResources().getString(R.string.activity_record_signal_strength_excellent));
-                        }
-                        else if (DataReading.EXECELLENT_RSRP_THRESHOLD > dataReadingCopy.getRsrp() && dataReadingCopy.getRsrp() >= DataReading.GOOD_RSRP_THRESHOLD) {
+                        } else if (DataReading.EXECELLENT_RSRP_THRESHOLD > dataReadingCopy.getRsrp() && dataReadingCopy.getRsrp() >= DataReading.GOOD_RSRP_THRESHOLD) {
                             mSignalStrengthText.setText(getResources().getString(R.string.activity_record_signal_strength_good));
-                        }
-                        else if (DataReading.GOOD_RSRP_THRESHOLD > dataReadingCopy.getRsrp() && dataReadingCopy.getRsrp() >= DataReading.POOR_RSRP_THRESHOLD) {
+                        } else if (DataReading.GOOD_RSRP_THRESHOLD > dataReadingCopy.getRsrp() && dataReadingCopy.getRsrp() >= DataReading.POOR_RSRP_THRESHOLD) {
                             mSignalStrengthText.setText(getResources().getString(R.string.activity_record_signal_strength_poor));
-                        }
-                        else {
+                        } else {
                             mSignalStrengthText.setText(getResources().getString(R.string.activity_record_signal_strength_no_signal));
                         }
-                        mRsrpText.setText(String.format(Locale.getDefault(),"%d", dataReadingCopy.getRsrp()));
-                        mRsrqText.setText(String.format(Locale.getDefault(),"%d", dataReadingCopy.getRsrq()));
-                        mPciText.setText(dataReadingCopy.getPci() == -1 ? "N/A" : String.format(Locale.getDefault(),"%d", dataReadingCopy.getPci()));
-                        mDataPointsText.setText(String.format(Locale.getDefault(),"%d", numDataReadings));
-                        mOffsetText.setText(String.format(Locale.getDefault(),"%.1f", mOffset));
+                        mRsrpText.setText(String.format(Locale.getDefault(), "%d", dataReadingCopy.getRsrp()));
+                        mRsrqText.setText(String.format(Locale.getDefault(), "%d", dataReadingCopy.getRsrq()));
+                        mPciText.setText(dataReadingCopy.getPci() == -1 ? "N/A" : String.format(Locale.getDefault(), "%d", dataReadingCopy.getPci()));
+                        mDataPointsText.setText(String.format(Locale.getDefault(), "%d", numDataReadings));
+                        mOffsetText.setText(String.format(Locale.getDefault(), "%.1f", mOffset));
                     }
                 });
             }
-        }, 1000, 1000);
+        }, 1000, SAMPLE_RATE);
     }
 
     @Override
@@ -245,8 +266,7 @@ public abstract class RecordActivity extends AppCompatActivity {
             if (mSignalStrengthListener != null) {
                 ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(mSignalStrengthListener, SignalStrengthListener.LISTEN_NONE);
             }
-        }
-        catch (Exception caught) {
+        } catch (Exception caught) {
             LteLog.e(TAG, caught.getMessage(), caught);
         }
 
@@ -269,8 +289,7 @@ public abstract class RecordActivity extends AppCompatActivity {
     public void pauseRecordButtonClicked(View view) {
         if (isRecording()) {
             setPauseRecordingState();
-        }
-        else {
+        } else {
             setResumeRecordingState();
         }
     }
@@ -314,18 +333,48 @@ public abstract class RecordActivity extends AppCompatActivity {
         public void onSignalStrengthsChanged(SignalStrength signalStrength) {
             LteLog.i(TAG, "onSignalStrengthsChanged: " + signalStrength.toString());
             String[] values = signalStrength.toString().split(" ");
-            if (values != null && values.length > 12) {
+            if (values.length > 12) {
                 int rsrp = Integer.parseInt(values[9]);
                 int rsrq = Integer.parseInt(values[10]);
                 synchronized (MUTEX) {
                     mCurrentReading.setRsrp(rsrp);
                     mCurrentReading.setRsrq(rsrq);
                     mCurrentReading.setPci(DataReading.PCI_NA);
+                    try {
+                        final String provider = RECORD_TYPE.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
+                        Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
+                        lastLng = lastKnownLocation.getLatitude();
+                        lastLat = lastKnownLocation.getLongitude();
+                        lastAcc = lastKnownLocation.getAccuracy();
+                        if (!setInitialPosition && canSetCameraPosition()) {
+                            setLatestCameraPosition();
+                            setInitialPosition = true;
+                        }
+                    } catch (SecurityException e) {
+                        LteLog.e("location error", e.getMessage(), e);
+                    }
+                    mCurrentReading.setLat(lastLat);
+                    mCurrentReading.setLng(lastLng);
+                    mCurrentReading.setAcc(lastAcc);
                 }
-                LteLog.i(TAG, String.format(Locale.getDefault(),"rsrp: %d, rsrq: %d", rsrp, rsrq));
+                LteLog.i(TAG, String.format(Locale.getDefault(), "rsrp: %d, rsrq: %d", rsrp, rsrq));
             }
 
             super.onSignalStrengthsChanged(signalStrength);
         }
+    }
+
+    private boolean canSetCameraPosition() {
+        return lastLng != 0 && lastLat != 0 && mapboxMap != null;
+    }
+
+    private void setLatestCameraPosition() {
+        CameraPosition position = new CameraPosition.Builder()
+                .target(new LatLng(lastLat, lastLng)) // Sets the new camera position
+                .zoom(13) // Sets the zoom
+                .bearing(0) // Rotate the camera
+                .tilt(0) // Set the camera tilt
+                .build();
+        mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), 7000);
     }
 }

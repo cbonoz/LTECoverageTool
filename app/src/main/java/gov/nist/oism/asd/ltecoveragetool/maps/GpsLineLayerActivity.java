@@ -16,9 +16,7 @@ import android.widget.Toast;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.LineString;
-import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
@@ -26,36 +24,32 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import gov.nist.oism.asd.ltecoveragetool.R;
 import gov.nist.oism.asd.ltecoveragetool.RecordActivity;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
+
+import static gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity.GPS_OPTION;
 
 /**
  * Add a GeoJSON line to a map.
  */
 public class GpsLineLayerActivity extends RecordActivity implements LocationListener {
 
-    protected LocationManager locationManager;
-    protected LocationListener locationListener;
-    protected double latitude;
-    protected double longitude;
-
-    private MapView mapView;
-    private List<Point> routeCoordinates;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Mapbox.getInstance(this, getString(R.string.access_token));
+        Mapbox.getInstance(this, getString(R.string.testing_token));
         setContentView(R.layout.activity_style_line_layer);
         setupLocation();
         super.onCreate(savedInstanceState);
+        RECORD_TYPE = GPS_OPTION;
 
         // This contains the MapView in XML and needs to be called after the access token is configured.
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(mapboxMap -> mapboxMap.setStyle(Style.OUTDOORS, style -> {
+            this.mapboxMap = mapboxMap;
 
             initRouteCoordinates();
 
@@ -94,7 +88,7 @@ public class GpsLineLayerActivity extends RecordActivity implements LocationList
             return;
         }
 
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, this);
 
     }
 
@@ -108,13 +102,13 @@ public class GpsLineLayerActivity extends RecordActivity implements LocationList
     private void initRouteCoordinates() {
         // Create a list to store our line coordinates.
         routeCoordinates = new ArrayList<>();
-        routeCoordinates.add(Point.fromLngLat(-118.39439114221236, 33.397676454651766));
-        routeCoordinates.add(Point.fromLngLat(-118.39421054012902, 33.39769799454838));
-        routeCoordinates.add(Point.fromLngLat(-118.39408583869053, 33.39761901490136));
-        routeCoordinates.add(Point.fromLngLat(-118.39388373635917, 33.397328225582285));
-        routeCoordinates.add(Point.fromLngLat(-118.39372033447427, 33.39728514560042));
-        routeCoordinates.add(Point.fromLngLat(-118.3930882271826, 33.39756875508861));
-        routeCoordinates.add(Point.fromLngLat(-118.3928216241072, 33.39759029501192));
+//        routeCoordinates.add(Point.fromLngLat(-118.39439114221236, 33.397676454651766));
+//        routeCoordinates.add(Point.fromLngLat(-118.39421054012902, 33.39769799454838));
+//        routeCoordinates.add(Point.fromLngLat(-118.39408583869053, 33.39761901490136));
+//        routeCoordinates.add(Point.fromLngLat(-118.39388373635917, 33.397328225582285));
+//        routeCoordinates.add(Point.fromLngLat(-118.39372033447427, 33.39728514560042));
+//        routeCoordinates.add(Point.fromLngLat(-118.3930882271826, 33.39756875508861));
+//        routeCoordinates.add(Point.fromLngLat(-118.3928216241072, 33.39759029501192));
 
     }
 
@@ -163,9 +157,9 @@ public class GpsLineLayerActivity extends RecordActivity implements LocationList
 
     @Override
     public void onLocationChanged(Location location) {
-        latitude = location.getLatitude();
-        longitude = location.getLongitude();
-        LteLog.d("loc", String.format("%d, %d", latitude, longitude));
+        lastLat = location.getLatitude();
+        lastLng = location.getLongitude();
+        LteLog.d("loc", String.format("%d, %d", lastLat, lastLng));
     }
 
     @Override
