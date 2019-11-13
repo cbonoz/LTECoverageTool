@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:mapbox="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true"
+    android:orientation="vertical">
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+
+        <com.mapbox.mapboxsdk.maps.MapView
+            android:id="@+id/mapView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            mapbox:mapbox_cameraTargetLat="33.39243835"
+            mapbox:mapbox_cameraTargetLng="-118.38265415000001"
+            mapbox:mapbox_cameraZoom="13.448986053466797" />
+
+
+        <LinearLayout
+            android:id="@+id/floor_button_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:background="@color/mapbox_blue"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/second_level_button"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:text="2"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/ground_level_button"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:text="G"
+                android:textColor="@color/white" />
+        </LinearLayout>
+
+    </android.support.design.widget.CoordinatorLayout>
+
+    <include layout="@layout/activity_recording_base" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp">
+
+        <Button
+            android:id="@+id/button2"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="uncertaintyStatementButtonClicked"
+            android:text="@string/activity_record_uncertainty_statement_text"
+            android:textColor="@color/activity_record_clickable_color" />
+    </LinearLayout>
+
+
+</LinearLayout>
+

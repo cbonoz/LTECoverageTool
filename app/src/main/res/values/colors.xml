@@ -27,4 +27,7 @@
     <!-- Record Activity. -->
     <color name="activity_record_text_value_color">#8E9DFB</color>
     <color name="activity_record_clickable_color">#FFFFFF</color>
+
+
+    <color name="white">#fff</color>
 </resources>

@@ -30,16 +30,23 @@ import android.widget.Toast;
 
 import java.util.Locale;
 
+import gov.nist.oism.asd.ltecoveragetool.maps.FloorPlanActivity;
 import gov.nist.oism.asd.ltecoveragetool.maps.GpsLineLayerActivity;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.FLOOR_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.NO_GPS_OPTION;
+/*
+ * Resources:
+ * https://docs.mapbox.com/android/maps/examples/create-a-line-layer/
+ * https://docs.mapbox.com/android/maps/examples/floor-plan/
+ * https://docs.mapbox.com/android/maps/examples/click-to-add-image/
+ */
 public class NewRecordingActivity extends AppCompatActivity {
 
     public static final String OFFSET_KEY = "offset_key";
-
-    public static final String GPS_OPTION = "gps_option";
-    public static final String NO_GPS_OPTION = "no_gps_option";
-    public static final String FLOOR_OPTION = "floor_option";
+    public static final String MAP_MODE_KEY = "map_mode_key";
 
     private static final String TAG = NewRecordingActivity.class.getSimpleName();
     private static final int PERMISSION_REQUEST_ACCESS_COARSE_LOCATION = 1;
@@ -107,18 +114,19 @@ public class NewRecordingActivity extends AppCompatActivity {
         final Intent intent;
         switch (lastOptionSelected) {
             case NO_GPS_OPTION:
+            case GPS_OPTION:
                 intent = new Intent(this, GpsLineLayerActivity.class);
                 break;
             case FLOOR_OPTION:
-                intent = new Intent(this, GpsLineLayerActivity.class);
+                intent = new Intent(this, FloorPlanActivity.class);
                 break;
-            case GPS_OPTION:
             default:
-                intent = new Intent(this, GpsLineLayerActivity.class);
-                break;
+                Toast.makeText(this, getString(R.string.unknown_mode), Toast.LENGTH_SHORT).show();
+                return;
         }
 
         intent.putExtra(OFFSET_KEY, offset);
+        intent.putExtra(MAP_MODE_KEY, lastOptionSelected);
         startActivity(intent);
     }
 }

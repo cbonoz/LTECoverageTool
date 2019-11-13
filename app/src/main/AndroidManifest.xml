@@ -81,6 +81,7 @@
                 android:value=".DisclaimerActivity"/>
         </activity>
         <activity android:name=".maps.GpsLineLayerActivity" />
+        <activity android:name=".maps.FloorPlanActivity" />
     </application>
 
 </manifest>

@@ -119,6 +119,11 @@
     <string name="your_trip">Your trip</string>
     <string name="confirm">Confirm</string>
     <string name="select_mode">Select Mode</string>
+    <string name="unknown_mode">Unknown map recording activity, please select another option</string>
+    <string name="tap_instructions">Tap the bound on the map for your floorplan in clockwise order</string>
+    <string name="selected_ground_floor">Selected ground floor</string>
+    <string name="selected_next_floor">Selected next floor</string>
+    <string name="start_floor_plan">To upload your floor plan, click 4 bounds on the map</string>
 
 
 </resources>

@@ -1,17 +1,12 @@
 package gov.nist.oism.asd.ltecoveragetool.maps;
 
-import android.Manifest;
-import android.content.Context;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.widget.Toast;
+import android.view.View;
 
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
@@ -24,26 +19,30 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
+import gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity;
 import gov.nist.oism.asd.ltecoveragetool.R;
 import gov.nist.oism.asd.ltecoveragetool.RecordActivity;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 
-import static gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity.GPS_OPTION;
-
 /**
  * Add a GeoJSON line to a map.
+ * Used for both modes 1 and 2.
  */
 public class GpsLineLayerActivity extends RecordActivity implements LocationListener {
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // These items should be set up before the parent onCreate is called.
         Mapbox.getInstance(this, getString(R.string.testing_token));
-        setContentView(R.layout.activity_style_line_layer);
-        setupLocation();
+        setContentView(R.layout.activity_record_mapping);
+        findViewById(R.id.floor_button_layout).setVisibility(View.GONE); // hide floor buttons.
+        mapMode = getIntent().getStringExtra(NewRecordingActivity.MAP_MODE_KEY);
+        LteLog.d("selected_mapmode", mapMode);
+
         super.onCreate(savedInstanceState);
-        RECORD_TYPE = GPS_OPTION;
+
 
         // This contains the MapView in XML and needs to be called after the access token is configured.
         mapView = findViewById(R.id.mapView);
@@ -56,41 +55,22 @@ public class GpsLineLayerActivity extends RecordActivity implements LocationList
             // Create the LineString from the list of coordinates and then make a GeoJSON
             // FeatureCollection so we can add the line to our map as a layer.
             style.addSource(new GeoJsonSource("line-source",
-                    FeatureCollection.fromFeatures(new Feature[] {Feature.fromGeometry(
+                    FeatureCollection.fromFeatures(new Feature[]{Feature.fromGeometry(
                             LineString.fromLngLats(routeCoordinates)
                     )})));
 
             // The layer properties for our line. This is where we make the line dotted, set the
             // color, etc.
             style.addLayer(new LineLayer("linelayer", "line-source").withProperties(
-                    PropertyFactory.lineDasharray(new Float[] {0.01f, 2f}),
+                    PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
                     PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
                     PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
                     PropertyFactory.lineWidth(5f),
                     PropertyFactory.lineColor(Color.parseColor("#e55e5e"))
             ));
         }));
-
     }
 
-    private void setupLocation() {
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            Toast.makeText(this, "Location permission not granted, please grant permission", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, this);
-
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -159,7 +139,7 @@ public class GpsLineLayerActivity extends RecordActivity implements LocationList
     public void onLocationChanged(Location location) {
         lastLat = location.getLatitude();
         lastLng = location.getLongitude();
-        LteLog.d("loc", String.format("%d, %d", lastLat, lastLng));
+        LteLog.d("loc", String.format(Locale.US, "%f, %f", lastLat, lastLng));
     }
 
     @Override

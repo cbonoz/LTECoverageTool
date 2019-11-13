@@ -47,6 +47,7 @@ import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
@@ -63,8 +64,11 @@ import java.util.TimerTask;
 
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 
-import static gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity.GPS_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
 
+/*
+ * Base activity for map-based signal strength recording.
+ */
 public abstract class RecordActivity extends AppCompatActivity {
 
     public static final String DATA_READINGS_KEY = "data_readings_key";
@@ -73,7 +77,7 @@ public abstract class RecordActivity extends AppCompatActivity {
     private static final String TAG = RecordActivity.class.getSimpleName();
     private static final Object MUTEX = new Object();
     private static final long SAMPLE_RATE = 2000; // ms
-    protected static String RECORD_TYPE;
+    protected static String mapMode;
 
     protected MapView mapView;
     protected List<Point> routeCoordinates;
@@ -99,9 +103,12 @@ public abstract class RecordActivity extends AppCompatActivity {
     private Timer mTimer;
     private List<DataReading> mDataReadings;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setupLocation();
 
         mCurrentReading = new DataReading();
         mDataReadings = new ArrayList<>();
@@ -249,6 +256,24 @@ public abstract class RecordActivity extends AppCompatActivity {
         }, 1000, SAMPLE_RATE);
     }
 
+
+    private void setupLocation() {
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            Toast.makeText(this, "Location permission not granted, please grant permission", Toast.LENGTH_LONG).show();
+            return;
+        }
+//        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, this);
+    }
+
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -341,13 +366,13 @@ public abstract class RecordActivity extends AppCompatActivity {
                     mCurrentReading.setRsrq(rsrq);
                     mCurrentReading.setPci(DataReading.PCI_NA);
                     try {
-                        final String provider = RECORD_TYPE.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
+                        final String provider = mapMode.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
                         Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
-                        lastLng = lastKnownLocation.getLatitude();
-                        lastLat = lastKnownLocation.getLongitude();
+                        lastLat = lastKnownLocation.getLatitude();
+                        lastLng = lastKnownLocation.getLongitude();
                         lastAcc = lastKnownLocation.getAccuracy();
                         if (!setInitialPosition && canSetCameraPosition()) {
-                            setLatestCameraPosition();
+                            setCameraPosition(new LatLng(lastLat, lastLng));
                             setInitialPosition = true;
                         }
                     } catch (SecurityException e) {
@@ -368,13 +393,13 @@ public abstract class RecordActivity extends AppCompatActivity {
         return lastLng != 0 && lastLat != 0 && mapboxMap != null;
     }
 
-    private void setLatestCameraPosition() {
+    private void setCameraPosition(LatLng location) {
         CameraPosition position = new CameraPosition.Builder()
-                .target(new LatLng(lastLat, lastLng)) // Sets the new camera position
-                .zoom(13) // Sets the zoom
+                .target(location) // Sets the new camera position
+                .zoom(13) // https://docs.mapbox.com/help/glossary/zoom-level/
                 .bearing(0) // Rotate the camera
                 .tilt(0) // Set the camera tilt
                 .build();
-        mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), 7000);
+        mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), 5000);
     }
 }
