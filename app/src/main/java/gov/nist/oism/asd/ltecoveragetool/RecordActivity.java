@@ -465,7 +465,7 @@ public abstract class RecordActivity extends AppCompatActivity{
                     count++;
                     if(routeCoordinates.size() >= 2 && rawFeature != null && rawFeature.has("features"))
                     {
-                        Log.e("foud", rawFeature.toString());
+                        Log.d("plot", rawFeature.toString());
 
                         String grade = "";
                         if (mDataReadings != null) {
