@@ -400,9 +400,24 @@ public abstract class RecordActivity extends AppCompatActivity{
             //String[] values = signalStrength.toString().split(" ");
 //            if (values.length > 12) {
             String temp = signalStrength.toString();
+            String[] values = signalStrength.toString().split(" ");
+
+            int rsrp = 0;
+            int rsrq = 0;
+            boolean found = false;
             if(temp.contains("rsrp=") && temp.contains("rsrq=")) {
-                int rsrp = Integer.parseInt(temp.substring(temp.indexOf("rsrp=") + 5,temp.indexOf(" ", temp.indexOf("rsrp=") + 5)));
-                int rsrq = Integer.parseInt(temp.substring(temp.indexOf("rsrq=") + 5,temp.indexOf(" ", temp.indexOf("rsrq=") + 5)));
+                rsrp = Integer.parseInt(temp.substring(temp.indexOf("rsrp=") + 5, temp.indexOf(" ", temp.indexOf("rsrp=") + 5)));
+                rsrq = Integer.parseInt(temp.substring(temp.indexOf("rsrq=") + 5, temp.indexOf(" ", temp.indexOf("rsrq=") + 5)));
+                found = true;
+            }
+            else if(values != null && values.length > 12) {
+                rsrp = Integer.parseInt(values[9]);
+                rsrq = Integer.parseInt(values[10]);
+                found = true;
+            }
+            
+            if(found)
+            {
                 synchronized (MUTEX) {
                     mCurrentReading.setRsrp(rsrp);
                     mCurrentReading.setRsrq(rsrq);
