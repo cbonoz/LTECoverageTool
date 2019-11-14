@@ -415,7 +415,7 @@ public abstract class RecordActivity extends AppCompatActivity{
                 rsrq = Integer.parseInt(values[10]);
                 found = true;
             }
-            
+
             if(found)
             {
                 synchronized (MUTEX) {
