@@ -40,6 +40,7 @@ import android.text.SpannableString;
 import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -462,8 +463,10 @@ public abstract class RecordActivity extends AppCompatActivity{
 
                     routeCoordinates.add(Point.fromLngLat(lastLng, lastLat));
                     count++;
-                    if(routeCoordinates.size() > 2 && rawFeature != null && rawFeature.has("features"))
+                    if(routeCoordinates.size() >= 2 && rawFeature != null && rawFeature.has("features"))
                     {
+                        Log.e("foud", rawFeature.toString());
+
                         String grade = "";
                         if (mDataReadings != null) {
                             for (DataReading dataReading : mDataReadings) {
@@ -522,13 +525,13 @@ public abstract class RecordActivity extends AppCompatActivity{
                                                             get("color"), rgb(0, 0, 0),
                                                             stop("top", rgb(0, 255, 0)),
                                                             stop("middle", rgb(255, 255, 0)),
-                                                            stop("middlelow", rgb(255, 103, 1)),
+                                                            stop("middlelow", rgb(255, 165, 0)),
                                                             stop("low", rgb(255, 0, 0))
                                                     )),
                                             PropertyFactory.visibility(Property.VISIBLE),
                                             PropertyFactory.lineWidth(3f)
                                     ));
-                                    routeCoordinates.clear();
+                                    routeCoordinates.remove(0);
                                 });
                     }
                     //mapboxMap.setStyle();
