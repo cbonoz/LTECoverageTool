@@ -16,11 +16,7 @@
         <com.mapbox.mapboxsdk.maps.MapView
             android:id="@+id/mapView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            mapbox:mapbox_cameraTargetLat="33.39243835"
-            mapbox:mapbox_cameraTargetLng="-118.38265415000001"
-            mapbox:mapbox_cameraZoom="13.448986053466797" />
-
+            android:layout_height="match_parent"/>
 
         <LinearLayout
             android:id="@+id/floor_button_layout"

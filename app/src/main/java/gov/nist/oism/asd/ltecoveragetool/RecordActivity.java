@@ -17,11 +17,9 @@
 package gov.nist.oism.asd.ltecoveragetool;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -42,7 +40,6 @@ import android.text.SpannableString;
 import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -52,23 +49,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.mapbox.android.core.location.LocationEngineProvider;
-import com.mapbox.android.core.location.LocationEngineRequest;
 import com.mapbox.android.core.permissions.PermissionsManager;
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.location.LocationComponent;
-import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
-import com.mapbox.mapboxsdk.location.modes.CameraMode;
-import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
-import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
@@ -79,18 +66,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
+
 import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.match;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.rgb;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
-import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
-
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
 
 /*
@@ -392,6 +379,27 @@ public abstract class RecordActivity extends AppCompatActivity{
         mRecordingImage.startAnimation(mRecordingImageAnimation);
     }
 
+    private Location getLastKnownLocation() {
+        List<String> providers = locationManager.getProviders(true);
+        Location bestLocation = null;
+        for (String provider : providers) {
+            Location l;
+            try {
+               l = locationManager.getLastKnownLocation(provider);
+            } catch (SecurityException e) {
+               l = null;
+            }
+            if (l == null) {
+                continue;
+            }
+            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                // Found best last known location: %s", l);
+                bestLocation = l;
+            }
+        }
+        return bestLocation;
+    }
+
     private class SignalStrengthListener extends PhoneStateListener {
 
         @Override
@@ -424,7 +432,10 @@ public abstract class RecordActivity extends AppCompatActivity{
                     mCurrentReading.setPci(DataReading.PCI_NA);
                     try {
                         final String provider = mapMode.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
-                        Location lastKnownLocation = locationManager.getLastKnownLocation(provider);
+                        final Location lastKnownLocation = locationManager.getLastKnownLocation(provider); // or getLastKnownLocation() for any provider.
+                        if (lastKnownLocation == null) {
+                            return;
+                        }
                         lastLat = lastKnownLocation.getLatitude();
                         lastLng = lastKnownLocation.getLongitude();
                         lastAcc = lastKnownLocation.getAccuracy();
@@ -472,54 +483,52 @@ public abstract class RecordActivity extends AppCompatActivity{
                         }
                         String finalGrade = grade;
                         mapboxMap.setStyle(Style.OUTDOORS,
-                                new Style.OnStyleLoaded() {
-                                    @Override public void onStyleLoaded(@NonNull Style style) {
-                                        // Retrieve GeoJSON from local file and add it to the map
+                                style -> {
+                                    // Retrieve GeoJSON from local file and add it to the map
 
-                                        JSONObject tmp = new JSONObject();
-                                        try {
-                                            tmp.put("type","Feature");
-                                            JSONObject color = new JSONObject();
-                                            color.put("color", finalGrade);
-                                            tmp.put("properties", color);
+                                    JSONObject tmp1 = new JSONObject();
+                                    try {
+                                        tmp1.put("type","Feature");
+                                        JSONObject color = new JSONObject();
+                                        color.put("color", finalGrade);
+                                        tmp1.put("properties", color);
 
-                                            JSONObject geometry = new JSONObject();
-                                            JSONArray coordinates = new JSONArray();
+                                        JSONObject geometry = new JSONObject();
+                                        JSONArray coordinates = new JSONArray();
 
-                                            for(int i = 0; i < routeCoordinates.size(); i++)
-                                            {
-                                                JSONArray coordinate = new JSONArray();
-                                                coordinate.put(routeCoordinates.get(i).longitude());
-                                                coordinate.put(routeCoordinates.get(i).latitude());
-                                                coordinates.put(coordinate);
-                                            }
-
-                                            geometry.put("type", "LineString");
-                                            geometry.put("coordinates", coordinates);
-                                            tmp.put("geometry", geometry);
-
-                                            rawFeature.getJSONArray("features").put(tmp);
-
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
+                                        for(int i = 0; i < routeCoordinates.size(); i++)
+                                        {
+                                            JSONArray coordinate = new JSONArray();
+                                            coordinate.put(routeCoordinates.get(i).longitude());
+                                            coordinate.put(routeCoordinates.get(i).latitude());
+                                            coordinates.put(coordinate);
                                         }
 
+                                        geometry.put("type", "LineString");
+                                        geometry.put("coordinates", coordinates);
+                                        tmp1.put("geometry", geometry);
 
-                                        style.addSource(new GeoJsonSource("lines", rawFeature.toString()));
-                                        style.addLayer(new LineLayer("finalLines", "lines").withProperties(
-                                                PropertyFactory.lineColor(
-                                                        match(
-                                                                get("color"), rgb(0, 0, 0),
-                                                                stop("top", rgb(0, 255, 0)),
-                                                                stop("middle", rgb(255, 255, 0)),
-                                                                stop("middlelow", rgb(255, 103, 1)),
-                                                                stop("low", rgb(255, 0, 0))
-                                                        )),
-                                                PropertyFactory.visibility(Property.VISIBLE),
-                                                PropertyFactory.lineWidth(3f)
-                                        ));
-                                        routeCoordinates.clear();
+                                        rawFeature.getJSONArray("features").put(tmp1);
+
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
                                     }
+
+
+                                    style.addSource(new GeoJsonSource("lines", rawFeature.toString()));
+                                    style.addLayer(new LineLayer("finalLines", "lines").withProperties(
+                                            PropertyFactory.lineColor(
+                                                    match(
+                                                            get("color"), rgb(0, 0, 0),
+                                                            stop("top", rgb(0, 255, 0)),
+                                                            stop("middle", rgb(255, 255, 0)),
+                                                            stop("middlelow", rgb(255, 103, 1)),
+                                                            stop("low", rgb(255, 0, 0))
+                                                    )),
+                                            PropertyFactory.visibility(Property.VISIBLE),
+                                            PropertyFactory.lineWidth(3f)
+                                    ));
+                                    routeCoordinates.clear();
                                 });
                     }
                     //mapboxMap.setStyle();
