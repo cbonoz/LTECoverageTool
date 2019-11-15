@@ -73,7 +73,7 @@ public class GradeFragment extends Fragment {
         //intentShareFile.putExtra(Intent.EXTRA_SUBJECT,"Sharing File Subject);
         //intentShareFile.putExtra(Intent.EXTRA_TEXT, "Sharing File Description");
 
-        startActivity(Intent.createChooser(intentShareFile, "Share File"));
+        startActivity(Intent.createChooser(intentShareFile, "Share Data File"));
 
     }
 

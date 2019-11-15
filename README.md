@@ -7,6 +7,14 @@
 * Mode 2: Heat map without GPS (using localized network provider) to present data on a map.
 * Mode 3: Heat map without GPS overlaid on an image or floor plan uploaded by a user. User can click where he she started and correct the route as needed.
 
+
+### Running the app
+* Install Android studio and import project via gradle
+* Replace "testing_token" in strings.xml with your mapbox API key.
+* Connect emulator with recommended API 19+ (for non-gps modes only). Recommend using physical and/or recent Android device for testing - such as a Google Pixel 3XL+
+* Run project on device.
+
+
 ## Original project readme
 
 ### PURPOSE
