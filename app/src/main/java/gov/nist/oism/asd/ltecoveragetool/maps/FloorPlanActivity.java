@@ -77,14 +77,14 @@ public class FloorPlanActivity extends RecordActivity implements
     @Override
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         levelButtons = findViewById(R.id.floor_button_layout);
+        initRouteCoordinates();
+        this.mapboxMap = mapboxMap;
 
         Toast.makeText(this, getString(R.string.start_floor_plan), Toast.LENGTH_LONG).show();
 
-        mapboxMap.setStyle(Style.MAPBOX_STREETS, style -> {
-            initRouteCoordinates();
+        this.mapboxMap.setStyle(Style.MAPBOX_STREETS, style -> {
             boundsFeatureList = new ArrayList<>();
             boundsCirclePointList = new ArrayList<>();
-            this.mapboxMap = mapboxMap;
             mapboxMap.addOnMapClickListener(FloorPlanActivity.this);
             imageCountIndex = 0;
             initCircleSource(style);
