@@ -78,10 +78,11 @@ public class DisplayResultsActivity extends AppCompatActivity {
                 try {
                     File file = new File(getExternalFilesDir(null), mCsvFilename + ".csv");
                     writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
-                    writer.write("\"Time\",\"RSRP\",\"RSRQ\",\"LAT\",\"LNG\",\"PCI\",\"OFFSET=" + mOffset + "\"\n");
+                    writer.write("\"Time\",\"RSRP\",\"RSRQ\",\"LAT\",\"LNG\",\"ELE\",\"ACC\",\"PCI\",\"OFFSET=" + mOffset + "\"\n");
                     for (DataReading dataReading : mDataReadings) {
+
                         String timestamp = DateFormat.getDateTimeInstance().format(dataReading.getTimestamp());
-                        writer.write(String.format("\"%s\",\"%d\",\"%d\",\"%f\",\"%f\",\"%s\"%n", timestamp, dataReading.getRsrp(), dataReading.getRsrq(),dataReading.getLat(),dataReading.getLng(), dataReading.getPci() == -1 ? "N/A" : dataReading.getPci() + ""));
+                        writer.write(String.format("\"%s\",\"%d\",\"%d\",\"%f\",\"%f\",\"%f\",\"%f\",\"%s\"%n", timestamp, dataReading.getRsrp(), dataReading.getRsrq(),dataReading.getLat(),dataReading.getLng(),dataReading.getElevation(),dataReading.getAcc(), dataReading.getPci() == -1 ? "N/A" : dataReading.getPci() + ""));
                     }
                     //Log.e("path", file.getAbsolutePath());
                     Toast.makeText(DisplayResultsActivity.this, "CSV file written", Toast.LENGTH_SHORT).show();

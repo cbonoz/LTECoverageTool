@@ -35,6 +35,7 @@ class DataReading implements Serializable {
     private int pci;
     private double lat;
     private double lng;
+    private double elevation;
     private double acc;
 
     DataReading() {
@@ -45,6 +46,7 @@ class DataReading implements Serializable {
         this.acc = -1;
         this.lat = -1;
         this.lng = -1;
+        this.elevation = -1;
     }
 
     DataReading(DataReading dataReading) {
@@ -54,6 +56,7 @@ class DataReading implements Serializable {
         this.pci = dataReading.pci;
         this.lng = dataReading.lng;
         this.lat = dataReading.lat;
+        this.elevation = dataReading.elevation;
     }
 
     Date getTimestamp() {
@@ -106,5 +109,13 @@ class DataReading implements Serializable {
 
     double getAcc() {
         return acc;
+    }
+
+    public void setElevation(double elevation) {
+        this.elevation = elevation;
+    }
+
+    double getElevation() {
+        return elevation;
     }
 }

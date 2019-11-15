@@ -107,6 +107,7 @@ public abstract class RecordActivity extends AppCompatActivity{
     protected double lastLat = 0;
     protected double lastLng = 0;
     protected double lastAcc;
+    protected double lastElevation;
 
     private Button mPauseRecordButton;
     private ImageView mRecordingImage;
@@ -440,6 +441,8 @@ public abstract class RecordActivity extends AppCompatActivity{
                         lastLat = lastKnownLocation.getLatitude();
                         lastLng = lastKnownLocation.getLongitude();
                         lastAcc = lastKnownLocation.getAccuracy();
+                        lastElevation = lastKnownLocation.getAltitude();
+
                         if (!setInitialPosition && canSetCameraPosition()) {
                             setCameraPosition(new LatLng(lastLat, lastLng));
                             setInitialPosition = true;
@@ -450,6 +453,7 @@ public abstract class RecordActivity extends AppCompatActivity{
                     mCurrentReading.setLat(lastLat);
                     mCurrentReading.setLng(lastLng);
                     mCurrentReading.setAcc(lastAcc);
+                    mCurrentReading.setElevation(lastElevation);
                 }
 
                 LteLog.i(TAG, String.format(Locale.getDefault(), "rsrp: %d, rsrq: %d", rsrp, rsrq));
