@@ -1,5 +1,7 @@
-# Map my LTE (LTE Coverage Tool extension)
+# Map my LTE
+---
 
+* LTE Coverage Tool extension
 * Submitted going after techotoprotect challenge #4.
 
 ## 3 new map modes:
