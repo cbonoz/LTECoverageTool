@@ -79,6 +79,7 @@ import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.match;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.rgb;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.FLOOR_OPTION;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
 
 /*
@@ -500,54 +501,58 @@ public abstract class RecordActivity extends AppCompatActivity {
                             }
                         }
                         String finalGrade = grade;
-                        mapboxMap.setStyle(Style.OUTDOORS,
-                                style -> {
-                                    // Retrieve GeoJSON from local file and add it to the map
+                        if (!mapMode.equals(FLOOR_OPTION)) {
+                            // TODO: allow multiple style overlays for floor.
+                            mapboxMap.setStyle(Style.OUTDOORS,
+                                    style -> {
+                                        // Retrieve GeoJSON from local file and add it to the map
 
-                                    JSONObject tmp1 = new JSONObject();
-                                    try {
-                                        tmp1.put("type", "Feature");
-                                        JSONObject color = new JSONObject();
-                                        color.put("color", finalGrade);
-                                        tmp1.put("properties", color);
+                                        JSONObject tmp1 = new JSONObject();
+                                        try {
+                                            tmp1.put("type", "Feature");
+                                            JSONObject color = new JSONObject();
+                                            color.put("color", finalGrade);
+                                            tmp1.put("properties", color);
 
-                                        JSONObject geometry = new JSONObject();
-                                        JSONArray coordinates = new JSONArray();
+                                            JSONObject geometry = new JSONObject();
+                                            JSONArray coordinates = new JSONArray();
 
-                                        for (int i = 0; i < routeCoordinates.size(); i++) {
-                                            JSONArray coordinate = new JSONArray();
-                                            coordinate.put(routeCoordinates.get(i).longitude());
-                                            coordinate.put(routeCoordinates.get(i).latitude());
-                                            coordinates.put(coordinate);
+                                            for (int i = 0; i < routeCoordinates.size(); i++) {
+                                                JSONArray coordinate = new JSONArray();
+                                                coordinate.put(routeCoordinates.get(i).longitude());
+                                                coordinate.put(routeCoordinates.get(i).latitude());
+                                                coordinates.put(coordinate);
+                                            }
+
+                                            geometry.put("type", "LineString");
+                                            geometry.put("coordinates", coordinates);
+                                            tmp1.put("geometry", geometry);
+
+                                            rawFeature.getJSONArray("features").put(tmp1);
+
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
                                         }
 
-                                        geometry.put("type", "LineString");
-                                        geometry.put("coordinates", coordinates);
-                                        tmp1.put("geometry", geometry);
 
-                                        rawFeature.getJSONArray("features").put(tmp1);
-
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                    }
-
-
-                                    style.addSource(new GeoJsonSource("lines", rawFeature.toString()));
-                                    style.addLayer(new LineLayer("finalLines", "lines").withProperties(
-                                            PropertyFactory.lineColor(
-                                                    match(
-                                                            get("color"), rgb(0, 0, 0),
-                                                            stop("top", rgb(0, 255, 0)),
-                                                            stop("middle", rgb(255, 255, 0)),
-                                                            stop("middlelow", rgb(255, 165, 0)),
-                                                            stop("low", rgb(255, 0, 0))
-                                                    )),
-                                            PropertyFactory.visibility(Property.VISIBLE),
-                                            PropertyFactory.lineWidth(3f)
-                                    ));
-                                    routeCoordinates.remove(0);
-                                });
+                                        style.addSource(new GeoJsonSource("lines", rawFeature.toString()));
+                                        style.addLayer(new LineLayer("finalLines", "lines").withProperties(
+                                                PropertyFactory.lineColor(
+                                                        match(
+                                                                get("color"), rgb(0, 0, 0),
+                                                                stop("top", rgb(0, 255, 0)),
+                                                                stop("middle", rgb(255, 255, 0)),
+                                                                stop("middlelow", rgb(255, 165, 0)),
+                                                                stop("low", rgb(255, 0, 0))
+                                                        )),
+                                                PropertyFactory.visibility(Property.VISIBLE),
+                                                PropertyFactory.lineWidth(3f)
+                                        ));
+                                        routeCoordinates.remove(0);
+                                    });
+                        }
                     }
+
                     //mapboxMap.setStyle();
                 }
 
