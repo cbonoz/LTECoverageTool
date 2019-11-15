@@ -17,6 +17,11 @@
 ### Screenshots
 
 <p align="center">
+    <img src="img/home.png" width=400/>
+</p>
+
+
+<p align="center">
     <img src="img/path1.png" width=400/>
 </p>
 
@@ -31,6 +36,11 @@
 <p align="center">
     <img src="img/result2.png"  width=400/>
 </p>
+
+<p align="center">
+    <img src="img/floor.png" width=400/>
+</p>
+
 ## Original project readme
 
 ### PURPOSE
