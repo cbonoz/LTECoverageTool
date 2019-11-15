@@ -1,4 +1,4 @@
-# Guided Map LTE Coverage
+# Map my LTE (LTE Coverage Tool extension)
 
 * Submitted going after techotoprotect challenge #4.
 
