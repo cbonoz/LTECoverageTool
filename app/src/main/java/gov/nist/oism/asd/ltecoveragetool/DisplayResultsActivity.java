@@ -24,7 +24,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.Toast;
 
 import java.io.File;
@@ -39,6 +38,8 @@ import java.util.Calendar;
 import java.util.List;
 
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
+
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.getExternalDataFile;
 
 public class DisplayResultsActivity extends AppCompatActivity {
 
@@ -70,36 +71,32 @@ public class DisplayResultsActivity extends AppCompatActivity {
     protected void writeCsv() {
 
         // Write CSV file in a background thread.
-        new Handler().postDelayed(new Runnable() {
+        new Handler().postDelayed(() -> {
+            Writer writer = null;
+            try {
+                File file = getExternalDataFile(this, mCsvFilename);
+                writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
+                writer.write("\"Time\",\"RSRP\",\"RSRQ\",\"LAT\",\"LNG\",\"ELE\",\"ACC\",\"PCI\",\"OFFSET=" + mOffset + "\"\n");
+                for (DataReading dataReading : mDataReadings) {
 
-            @Override
-            public void run() {
-                Writer writer = null;
-                try {
-                    File file = new File(getExternalFilesDir(null), mCsvFilename + ".csv");
-                    writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
-                    writer.write("\"Time\",\"RSRP\",\"RSRQ\",\"LAT\",\"LNG\",\"ELE\",\"ACC\",\"PCI\",\"OFFSET=" + mOffset + "\"\n");
-                    for (DataReading dataReading : mDataReadings) {
-
-                        String timestamp = DateFormat.getDateTimeInstance().format(dataReading.getTimestamp());
-                        writer.write(String.format("\"%s\",\"%d\",\"%d\",\"%f\",\"%f\",\"%f\",\"%f\",\"%s\"%n", timestamp, dataReading.getRsrp(), dataReading.getRsrq(),dataReading.getLat(),dataReading.getLng(),dataReading.getElevation(),dataReading.getAcc(), dataReading.getPci() == -1 ? "N/A" : dataReading.getPci() + ""));
-                    }
-                    //Log.e("path", file.getAbsolutePath());
-                    Toast.makeText(DisplayResultsActivity.this, "CSV file written", Toast.LENGTH_SHORT).show();
-
+                    String timestamp = DateFormat.getDateTimeInstance().format(dataReading.getTimestamp());
+                    writer.write(String.format("\"%s\",\"%d\",\"%d\",\"%f\",\"%f\",\"%f\",\"%f\",\"%s\"%n", timestamp, dataReading.getRsrp(), dataReading.getRsrq(),dataReading.getLat(),dataReading.getLng(),dataReading.getElevation(),dataReading.getAcc(), dataReading.getPci() == -1 ? "N/A" : dataReading.getPci() + ""));
                 }
-                catch (IOException caught) {
-                    LteLog.e("CSV Writer", caught.getMessage(), caught);
-                    Toast.makeText(DisplayResultsActivity.this, "Error writing CSV file", Toast.LENGTH_SHORT).show();
-                }
-                finally {
-                    if (writer != null) {
-                        try {
-                            writer.flush();
-                            writer.close();
-                        }
-                        catch (IOException ignore) {}
+                //Log.e("path", file.getAbsolutePath());
+                Toast.makeText(DisplayResultsActivity.this, "CSV file written", Toast.LENGTH_SHORT).show();
+
+            }
+            catch (IOException caught) {
+                LteLog.e("CSV Writer", caught.getMessage(), caught);
+                Toast.makeText(DisplayResultsActivity.this, "Error writing CSV file", Toast.LENGTH_SHORT).show();
+            }
+            finally {
+                if (writer != null) {
+                    try {
+                        writer.flush();
+                        writer.close();
                     }
+                    catch (IOException ignore) {}
                 }
             }
         }, 0);

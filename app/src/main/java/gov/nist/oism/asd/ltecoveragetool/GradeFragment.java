@@ -16,6 +16,8 @@
  */
 package gov.nist.oism.asd.ltecoveragetool;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -30,8 +32,12 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.formatter.PercentFormatter;
 
+import java.io.File;
+import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.getExternalDataFile;
 
 
 public class GradeFragment extends Fragment {
@@ -55,6 +61,22 @@ public class GradeFragment extends Fragment {
         return fragment;
     }
 
+    private void shareFile(File file) {
+
+        Intent intentShareFile = new Intent(Intent.ACTION_SEND);
+
+        intentShareFile.setType(URLConnection.guessContentTypeFromName(file.getName()));
+        intentShareFile.putExtra(Intent.EXTRA_STREAM,
+                Uri.parse("file://"+file.getAbsolutePath()));
+
+        //if you need
+        //intentShareFile.putExtra(Intent.EXTRA_SUBJECT,"Sharing File Subject);
+        //intentShareFile.putExtra(Intent.EXTRA_TEXT, "Sharing File Description");
+
+        startActivity(Intent.createChooser(intentShareFile, "Share File"));
+
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +91,8 @@ public class GradeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_grade, container, false);
         TextView filenameText = view.findViewById(R.id.fragment_grade_filename_text_ui);
         filenameText.setText(mFilename);
+
+        filenameText.setOnClickListener(view1 -> shareFile(getExternalDataFile(getContext(), mFilename)));
 
         double top = 0.0, middle = 0.0, low = 0.0;
         double topProbability = 0.0, middleProbability = 0.0, lowProbability = 0.0, grade = 0.0;
