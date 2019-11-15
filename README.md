@@ -1,4 +1,4 @@
-# Map my LTE
+Map my LTE
 ---
 
 * LTE Coverage Tool extension
