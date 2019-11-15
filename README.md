@@ -16,6 +16,11 @@
 * Connect emulator with recommended API 19+ (for non-gps modes only). Recommend using physical and/or recent Android device for testing - such as a Google Pixel 3XL+
 * Run project on device.
 
+
+### Demo video
+
+https://youtu.be/f2X6bt_zFR4
+
 ### Screenshots
 
 <p align="center">
