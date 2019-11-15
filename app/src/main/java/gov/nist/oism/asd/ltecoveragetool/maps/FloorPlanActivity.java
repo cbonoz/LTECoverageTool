@@ -55,7 +55,6 @@ public class FloorPlanActivity extends RecordActivity implements
     private static final String ID_IMAGE_LAYER = "layer-id";
     private static int PHOTO_PICK_CODE = 4;
     private MapView mapView;
-    private MapboxMap mapboxMap;
     private LatLngQuad quad;
     private List<Feature> boundsFeatureList;
     private List<Point> boundsCirclePointList;
@@ -82,9 +81,10 @@ public class FloorPlanActivity extends RecordActivity implements
         Toast.makeText(this, getString(R.string.start_floor_plan), Toast.LENGTH_LONG).show();
 
         mapboxMap.setStyle(Style.MAPBOX_STREETS, style -> {
+            initRouteCoordinates();
             boundsFeatureList = new ArrayList<>();
             boundsCirclePointList = new ArrayList<>();
-            FloorPlanActivity.this.mapboxMap = mapboxMap;
+            this.mapboxMap = mapboxMap;
             mapboxMap.addOnMapClickListener(FloorPlanActivity.this);
             imageCountIndex = 0;
             initCircleSource(style);

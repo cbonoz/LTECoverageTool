@@ -84,7 +84,7 @@ import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
 /*
  * Base activity for map-based signal strength recording.
  */
-public abstract class RecordActivity extends AppCompatActivity{
+public abstract class RecordActivity extends AppCompatActivity {
 
     public static final String DATA_READINGS_KEY = "data_readings_key";
     public static final String OFFSET_KEY = "offset_key";
@@ -92,6 +92,7 @@ public abstract class RecordActivity extends AppCompatActivity{
     private static final String TAG = RecordActivity.class.getSimpleName();
     private static final Object MUTEX = new Object();
     private static final long SAMPLE_RATE = 2000; // ms
+    private static final int ANIMATION_MS = 3000;
     protected static String mapMode;
 
     protected MapView mapView;
@@ -302,6 +303,18 @@ public abstract class RecordActivity extends AppCompatActivity{
 //        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, this);
     }
 
+    protected void initRouteCoordinates() {
+        // Create a list to store our line coordinates.
+        routeCoordinates = new ArrayList<>();
+//        routeCoordinates.add(Point.fromLngLat(-118.39439114221236, 33.397676454651766));
+//        routeCoordinates.add(Point.fromLngLat(-118.39421054012902, 33.39769799454838));
+//        routeCoordinates.add(Point.fromLngLat(-118.39408583869053, 33.39761901490136));
+//        routeCoordinates.add(Point.fromLngLat(-118.39388373635917, 33.397328225582285));
+//        routeCoordinates.add(Point.fromLngLat(-118.39372033447427, 33.39728514560042));
+//        routeCoordinates.add(Point.fromLngLat(-118.3930882271826, 33.39756875508861));
+//        routeCoordinates.add(Point.fromLngLat(-118.3928216241072, 33.39759029501192));
+
+    }
 
     @Override
     protected void onResume() {
@@ -387,9 +400,9 @@ public abstract class RecordActivity extends AppCompatActivity{
         for (String provider : providers) {
             Location l;
             try {
-               l = locationManager.getLastKnownLocation(provider);
+                l = locationManager.getLastKnownLocation(provider);
             } catch (SecurityException e) {
-               l = null;
+                l = null;
             }
             if (l == null) {
                 continue;
@@ -415,26 +428,25 @@ public abstract class RecordActivity extends AppCompatActivity{
             int rsrp = 0;
             int rsrq = 0;
             boolean found = false;
-            if(temp.contains("rsrp=") && temp.contains("rsrq=")) {
+            if (temp.contains("rsrp=") && temp.contains("rsrq=")) {
                 rsrp = Integer.parseInt(temp.substring(temp.indexOf("rsrp=") + 5, temp.indexOf(" ", temp.indexOf("rsrp=") + 5)));
                 rsrq = Integer.parseInt(temp.substring(temp.indexOf("rsrq=") + 5, temp.indexOf(" ", temp.indexOf("rsrq=") + 5)));
                 found = true;
-            }
-            else if(values != null && values.length > 12) {
+            } else if (values != null && values.length > 12) {
                 rsrp = Integer.parseInt(values[9]);
                 rsrq = Integer.parseInt(values[10]);
                 found = true;
             }
 
-            if(found)
-            {
+            if (found) {
                 synchronized (MUTEX) {
                     mCurrentReading.setRsrp(rsrp);
                     mCurrentReading.setRsrq(rsrq);
                     mCurrentReading.setPci(DataReading.PCI_NA);
                     try {
                         final String provider = mapMode.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
-                        final Location lastKnownLocation = locationManager.getLastKnownLocation(provider); // or getLastKnownLocation() for any provider.
+
+                        final Location lastKnownLocation = locationManager.getLastKnownLocation(provider); // or getLastKnownLocation() for provider agnostic.
                         if (lastKnownLocation == null) {
                             return;
                         }
@@ -458,17 +470,19 @@ public abstract class RecordActivity extends AppCompatActivity{
 
                 LteLog.i(TAG, String.format(Locale.getDefault(), "rsrp: %d, rsrq: %d", rsrp, rsrq));
 
-                if(mapboxMap != null)
-                {
+                if (mapboxMap != null) {
                     Location tmp = new Location("");
                     tmp.setLatitude(lastLat);
                     tmp.setLongitude(lastLng);
-                    mapboxMap.getLocationComponent().forceLocationUpdate(tmp);
+                    try {
+                        mapboxMap.getLocationComponent().forceLocationUpdate(tmp);
+                    } catch (Exception e) {
+                        LteLog.e("error forcing location update", e.getMessage(), e);
+                    }
 
                     routeCoordinates.add(Point.fromLngLat(lastLng, lastLat));
                     count++;
-                    if(routeCoordinates.size() >= 2 && rawFeature != null && rawFeature.has("features"))
-                    {
+                    if (routeCoordinates.size() >= 2 && rawFeature != null && rawFeature.has("features")) {
                         Log.d("plot", rawFeature.toString());
 
                         String grade = "";
@@ -476,14 +490,11 @@ public abstract class RecordActivity extends AppCompatActivity{
                             for (DataReading dataReading : mDataReadings) {
                                 if (rsrp >= -95) {
                                     grade = "top";
-                                }
-                                else if (rsrp < -95 && rsrp >= -103) {
+                                } else if (rsrp < -95 && rsrp >= -103) {
                                     grade = "middlelow";
-                                }
-                                else if (rsrp < -103 && rsrp >= -110) {
+                                } else if (rsrp < -103 && rsrp >= -110) {
                                     grade = "middle";
-                                }
-                                else {
+                                } else {
                                     grade = "low";
                                 }
                             }
@@ -495,7 +506,7 @@ public abstract class RecordActivity extends AppCompatActivity{
 
                                     JSONObject tmp1 = new JSONObject();
                                     try {
-                                        tmp1.put("type","Feature");
+                                        tmp1.put("type", "Feature");
                                         JSONObject color = new JSONObject();
                                         color.put("color", finalGrade);
                                         tmp1.put("properties", color);
@@ -503,8 +514,7 @@ public abstract class RecordActivity extends AppCompatActivity{
                                         JSONObject geometry = new JSONObject();
                                         JSONArray coordinates = new JSONArray();
 
-                                        for(int i = 0; i < routeCoordinates.size(); i++)
-                                        {
+                                        for (int i = 0; i < routeCoordinates.size(); i++) {
                                             JSONArray coordinate = new JSONArray();
                                             coordinate.put(routeCoordinates.get(i).longitude());
                                             coordinate.put(routeCoordinates.get(i).latitude());
@@ -558,7 +568,7 @@ public abstract class RecordActivity extends AppCompatActivity{
                 .bearing(0) // Rotate the camera
                 .tilt(0) // Set the camera tilt
                 .build();
-        mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), 5000);
+        mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), ANIMATION_MS);
     }
 
 }

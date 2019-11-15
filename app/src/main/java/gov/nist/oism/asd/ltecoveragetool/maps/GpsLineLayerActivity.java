@@ -26,7 +26,6 @@ import com.mapbox.mapboxsdk.style.layers.Property;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
-import java.util.ArrayList;
 import java.util.Locale;
 
 import gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity;
@@ -62,21 +61,6 @@ public class GpsLineLayerActivity extends RecordActivity  implements OnMapReadyC
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-
-    }
-
-    private void initRouteCoordinates() {
-        // Create a list to store our line coordinates.
-        routeCoordinates = new ArrayList<>();
-//        routeCoordinates.add(Point.fromLngLat(-118.39439114221236, 33.397676454651766));
-//        routeCoordinates.add(Point.fromLngLat(-118.39421054012902, 33.39769799454838));
-//        routeCoordinates.add(Point.fromLngLat(-118.39408583869053, 33.39761901490136));
-//        routeCoordinates.add(Point.fromLngLat(-118.39388373635917, 33.397328225582285));
-//        routeCoordinates.add(Point.fromLngLat(-118.39372033447427, 33.39728514560042));
-//        routeCoordinates.add(Point.fromLngLat(-118.3930882271826, 33.39756875508861));
-//        routeCoordinates.add(Point.fromLngLat(-118.3928216241072, 33.39759029501192));
-
     }
 
     @Override
@@ -163,44 +147,42 @@ public class GpsLineLayerActivity extends RecordActivity  implements OnMapReadyC
         })*/
 
         mapboxMap.setStyle(Style.OUTDOORS,
-                new Style.OnStyleLoaded() {
-                    @Override public void onStyleLoaded(@NonNull Style style) {
-                        mapstyle = style;
-                        initRouteCoordinates();
+                style -> {
+                    mapstyle = style;
+                    initRouteCoordinates();
 
-                        style.addSource(new GeoJsonSource("line-source",
-                                FeatureCollection.fromFeatures(new Feature[]{Feature.fromGeometry(
-                                        LineString.fromLngLats(routeCoordinates)
-                                )})));
+                    style.addSource(new GeoJsonSource("line-source",
+                            FeatureCollection.fromFeatures(new Feature[]{Feature.fromGeometry(
+                                    LineString.fromLngLats(routeCoordinates)
+                            )})));
 
 
-                        // The layer properties for our line. This is where we make the line dotted, set the
-                        // color, etc.
-                        style.addLayer(new LineLayer("high", "line-source").withProperties(
-                                //PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
-                                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
-                                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
-                                PropertyFactory.lineWidth(5f),
-                                PropertyFactory.lineColor(Color.parseColor("#00FF00"))
-                        ));
+                    // The layer properties for our line. This is where we make the line dotted, set the
+                    // color, etc.
+                    style.addLayer(new LineLayer("high", "line-source").withProperties(
+                            //PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
+                            PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+                            PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+                            PropertyFactory.lineWidth(5f),
+                            PropertyFactory.lineColor(Color.parseColor("#00FF00"))
+                    ));
 
-                        style.addLayer(new LineLayer("mid", "line-source").withProperties(
-                                //PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
-                                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
-                                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
-                                PropertyFactory.lineWidth(5f),
-                                PropertyFactory.lineColor(Color.parseColor("#FFFF00"))
-                        ));
+                    style.addLayer(new LineLayer("mid", "line-source").withProperties(
+                            //PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
+                            PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+                            PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+                            PropertyFactory.lineWidth(5f),
+                            PropertyFactory.lineColor(Color.parseColor("#FFFF00"))
+                    ));
 
-                        style.addLayer(new LineLayer("low", "line-source").withProperties(
-                                //PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
-                                PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
-                                PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
-                                PropertyFactory.lineWidth(5f),
-                                PropertyFactory.lineColor(Color.parseColor("#FF0000"))
-                        ));
-                        enableLocationComponent(style);
-                    }
+                    style.addLayer(new LineLayer("low", "line-source").withProperties(
+                            //PropertyFactory.lineDasharray(new Float[]{0.01f, 2f}),
+                            PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+                            PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+                            PropertyFactory.lineWidth(5f),
+                            PropertyFactory.lineColor(Color.parseColor("#FF0000"))
+                    ));
+                    enableLocationComponent(style);
                 });
     }
 
