@@ -17,19 +17,19 @@
 ### Screenshots
 
 <p align="center">
-    <img src="img/path1.png"/>
+    <img src="img/path1.png" width=400/>
 </p>
 
 <p align="center">
-    <img src="img/result1.png"/>
+    <img src="img/result1.png" width=400/>
 </p>
 
 <p align="center">
-    <img src="img/path2.png"/>
+    <img src="img/path2.png"  width=400/>
 </p>
 
 <p align="center">
-    <img src="img/result2.png"/>
+    <img src="img/result2.png"  width=400/>
 </p>
 ## Original project readme
 
