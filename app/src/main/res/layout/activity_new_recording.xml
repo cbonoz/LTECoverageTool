@@ -51,24 +51,20 @@
 
     <Button
         android:id="@+id/gps_map_button"
-        style="@style/Widget.AppCompat.Button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Map my route (with GPS)" />
+        style="@style/FullButton"
+        android:text="Map my route (GPS)" />
 
     <Button
         android:id="@+id/no_gps_map_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/FullButton"
         android:layout_marginTop="25dp"
-        android:text="Map my route (without GPS)" />
+        android:text="Map my route (no GPS)" />
 
     <Button
         android:id="@+id/floor_plan_map_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/FullButton"
         android:layout_marginTop="25dp"
-        android:text="Map my route using floor plan (without GPS)" />
+        android:text="Map my route with floor plan (no GPS)" />
 
 
 </LinearLayout>
