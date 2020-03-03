@@ -17,6 +17,14 @@
 * Run project on device.
 
 
+### TODO: Notes from 2/10
+1. Mode 1 - First function wasn’t quite working as in the original. Was using a google pixel 2 to test.
+2. Mode 2 - Using wifi data (was about a half mile off from correct values). Suggest combining with some other source to improve this. Not accurate enough currently. Couple the inertial sensors (IMU, etc.) to get a more accurate route.
+3. Mode 3 - No movement logged yet. Need better interface for starting the first location before recording.
+    1. Improve the multiple floor support and allow user to go between the floors. Allow overlaying the heat map.
+    2. Store relative data to where you started to correct after your starting location. Applies to mode 2 as well where this is no initial GPS location.
+
+
 ### Demo video
 
 https://youtu.be/f2X6bt_zFR4

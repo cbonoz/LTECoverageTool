@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LTE Coverage Tool</string>
+    <string name="app_name">Map my LTE</string>
 
     <!-- Disclaimer Screen. -->
     <string name="activity_disclaimer_liability_notice_link_text">Disclaimer of Liability Notice</string>
