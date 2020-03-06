@@ -12,13 +12,14 @@
         android:id="@+id/activity_record_signal_strength_label_ui"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
         android:text="@string/activity_record_signal_strength_label_text"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintBottom_toTopOf="@+id/activity_record_signal_strength_text_ui"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/activity_record_pause_resume_button_ui"
@@ -31,7 +32,6 @@
         android:drawableLeft="@drawable/ic_pause"
         android:drawablePadding="5dp"
         android:onClick="pauseRecordButtonClicked"
-        android:text="@string/activity_record_pause_button_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/activity_record_stop_button_ui"
         app:layout_constraintStart_toStartOf="parent"/>
@@ -83,6 +83,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:text="@string/activity_record_signal_strength_no_signal"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         app:layout_constraintStart_toStartOf="parent"

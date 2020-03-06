@@ -16,7 +16,7 @@
         <com.mapbox.mapboxsdk.maps.MapView
             android:id="@+id/mapView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent" />
 
         <LinearLayout
             android:id="@+id/floor_button_layout"
@@ -29,19 +29,18 @@
 
             <Button
                 android:id="@+id/second_level_button"
-                android:layout_width="50dp"
-                android:layout_height="wrap_content"
-                android:background="?android:attr/selectableItemBackground"
-                android:text="2"
-                android:textColor="@color/white" />
+                style="@style/FloorPlanButton"
+                android:text="2" />
+
+            <Button
+                android:id="@+id/first_level_button"
+                style="@style/FloorPlanButton"
+                android:text="1" />
 
             <Button
                 android:id="@+id/ground_level_button"
-                android:layout_width="50dp"
-                android:layout_height="wrap_content"
-                android:background="?android:attr/selectableItemBackground"
-                android:text="G"
-                android:textColor="@color/white" />
+                style="@style/FloorPlanButton"
+                android:text="G" />
         </LinearLayout>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

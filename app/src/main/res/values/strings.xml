@@ -95,7 +95,7 @@
     <string name="activity_record_lte_rsrp_label_text">LTE RSRP (dBm)*</string>
     <string name="activity_record_lte_rsrq_label_text">LTE RSRQ (dBm)*</string>
     <string name="activity_record_lte_pci_label_text">LTE PCI</string>
-    <string name="activity_record_data_points_label_text">Data points: </string>
+    <string name="activity_record_data_points_label_text">Data points:</string>
     <string name="activity_record_offset_label_text">Offset (dB)</string>
     <string name="activity_record_uncertainty_statement_text"><u>*Uncertainty Statement</u></string>
     <string name="activity_record_signal_strength_excellent">Excellent</string>
@@ -123,7 +123,7 @@
     <string name="tap_instructions">Tap the bound on the map for your floorplan in clockwise order</string>
     <string name="selected_ground_floor">Selected ground floor</string>
     <string name="selected_next_floor">Selected next floor</string>
-    <string name="start_floor_plan">To upload your floor plan, click 4 bounds on the map</string>
+    <string name="start_floor_plan">To upload a floor plan image on the map, click the 4 corners in clockwise order</string>
 
 
     <string name="floor_plan_tutorial">In floor plan mode, you can record LTE strength on a walkthrough across multiple floors. You will be prompted to confirm your location, then lay floor plan images down at your location for up to 3 floors.</string>
@@ -133,6 +133,10 @@
     <string name="record_gps_tutorial">Record GPS walkthrough</string>
     <string name="record_no_gps_tutorial">Record walkthrough without GPS</string>
     <string name="got_it">Got it</string>
+    <string name="start_recording">Start recording</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="start">Start</string>
 
 
 </resources>

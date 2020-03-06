@@ -83,14 +83,12 @@ public class FloorPlanActivity extends RecordActivity implements
     }
 
 
-
     @Override
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         levelButtons = findViewById(R.id.floor_button_layout);
         initRouteCoordinates();
         this.mapboxMap = mapboxMap;
 
-        Toast.makeText(this, getString(R.string.start_floor_plan), Toast.LENGTH_LONG).show();
 
         this.mapboxMap.setStyle(Style.MAPBOX_STREETS, style -> {
             boundsFeatureList = new ArrayList<>();
@@ -99,26 +97,23 @@ public class FloorPlanActivity extends RecordActivity implements
             imageCountIndex = 0;
             initCircleSource(style);
             initCircleLayer(style);
-            Toast.makeText(FloorPlanActivity.this, getString(R.string.tap_instructions), Toast.LENGTH_LONG).show();
+            Toast.makeText(FloorPlanActivity.this, getString(R.string.start_floor_plan), Toast.LENGTH_LONG).show();
         });
 
         initButtons();
     }
 
     private void initButtons() {
-        Button buttonSecondLevel = findViewById(R.id.second_level_button);
-        buttonSecondLevel.setOnClickListener(view -> {
-            Toast.makeText(getApplicationContext(), getString(R.string.selected_next_floor), Toast.LENGTH_SHORT).show();
-            // TODO: load geo layout
-//                indoorBuildingSource.setGeoJson(loadJsonFromAsset("white_house_lvl_1.geojson"));
-        });
-
-        Button buttonGroundLevel = findViewById(R.id.ground_level_button);
-        buttonGroundLevel.setOnClickListener(view -> {
-            Toast.makeText(getApplicationContext(), getString(R.string.selected_ground_floor), Toast.LENGTH_SHORT).show();
-            // TODO: load geo layout
-//                indoorBuildingSource.setGeoJson(loadJsonFromAsset("white_house_lvl_0.geojson"));
-        });
+        int[] buttons = {R.id.ground_level_button, R.id.first_level_button, R.id.second_level_button};
+        for (int i = 0; i < numFloors; i++) {
+            Button button = findViewById(buttons[i]);
+            button.setVisibility(View.VISIBLE); // show button.
+            final int floor = i + 1;
+            button.setOnClickListener(view -> {
+                Toast.makeText(getApplicationContext(), "Floor " + button.getText(), Toast.LENGTH_SHORT).show();
+                setCurrentFloor(floor);
+            });
+        }
     }
 
     @Override

@@ -133,7 +133,7 @@
             android:drawableLeft="@drawable/ic_pause"
             android:drawablePadding="5dp"
             android:onClick="pauseRecordButtonClicked"
-            android:text="@string/activity_record_pause_button_text" />
+            android:text="@string/start" />
 
         <Button
             android:id="@+id/activity_record_stop_button_ui"

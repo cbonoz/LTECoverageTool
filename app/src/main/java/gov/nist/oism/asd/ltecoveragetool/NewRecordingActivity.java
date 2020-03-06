@@ -64,6 +64,7 @@ public class NewRecordingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_recording);
+        setTitle(R.string.app_name);
 
         gpsButton = findViewById(R.id.gps_map_button);
         noGpsButton = findViewById(R.id.no_gps_map_button);

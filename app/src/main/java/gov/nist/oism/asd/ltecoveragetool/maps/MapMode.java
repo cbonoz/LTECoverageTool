@@ -3,6 +3,9 @@ package gov.nist.oism.asd.ltecoveragetool.maps;
 import android.content.Context;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MapMode {
 
@@ -17,14 +20,17 @@ public class MapMode {
     public static final String getHumanReadableOption(String option) {
         switch (option) {
             case NO_GPS_OPTION:
-                return "Map without GPS Result";
+                return "Record route (no GPS)";
             case FLOOR_OPTION:
-                return "Floor Plan Map Result";
+                return "Record floor plan";
             case GPS_OPTION:
             default:
-                return "Map with GPS Result";
+                return "Record route (GPS)";
         }
     }
+
+    public static final String[] FLOOR_OPTIONS = {"One Floor", "Two Floors", "Three Floors"};
+
 
     public static File getExternalDataFile(Context context, String fileName) {
         return new File(context.getExternalFilesDir(null), fileName + ".csv");

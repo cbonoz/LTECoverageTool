@@ -18,6 +18,7 @@ package gov.nist.oism.asd.ltecoveragetool;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -70,6 +71,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -81,8 +83,10 @@ import static com.mapbox.mapboxsdk.style.expressions.Expression.match;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.rgb;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.FLOOR_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.FLOOR_OPTIONS;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_FLOOR_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.getHumanReadableOption;
 
 /*
  * Base activity for map-based signal strength recording.
@@ -132,17 +136,35 @@ public abstract class RecordActivity extends AppCompatActivity {
     private String provider;
     private PrefManager prefManager;
 
+    protected int numFloors = 3;
+    private int currentFloor = 0;
+
+    protected void setCurrentFloor(int i) {
+        currentFloor = i;
+    }
+
+    protected int getCurrentFloor() {
+        return currentFloor;
+    }
+
+
     protected void showTutorialDialog(String title, String tutorial, String pref) {
         if (!prefManager.getBoolPreference(pref)) {
-            AlertDialog alert = new AlertDialog.Builder(this)
+            AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this)
                     .setTitle(title)
                     .setMessage(tutorial)
                     .setPositiveButton(this.getString(R.string.got_it), (dialog, which) -> {
-                        prefManager.saveBoolPreference(pref, true);
+                        // show the dialog for floor option every time.
+                        if (!SEEN_FLOOR_OPTION.equals(pref)) {
+                            prefManager.saveBoolPreference(pref, true);
+                        }
                         dialog.dismiss();
-                    })
-                    .create();
-            alert.show();
+                    });
+
+            if (SEEN_FLOOR_OPTION.equals(pref)) {
+                alertBuilder.setItems(FLOOR_OPTIONS, (dialogInterface, i) -> numFloors = i + 1);
+            }
+            alertBuilder.show();
         }
     }
 
@@ -151,6 +173,7 @@ public abstract class RecordActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         prefManager = new PrefManager(this);
         provider = mapMode.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
+        setTitle(getHumanReadableOption(mapMode));
 
         setupLocation();
 
@@ -167,6 +190,8 @@ public abstract class RecordActivity extends AppCompatActivity {
         mOffset = getIntent().getDoubleExtra(NewRecordingActivity.OFFSET_KEY, 0.0);
 
         mPauseRecordButton = findViewById(R.id.activity_record_pause_resume_button_ui);
+        mPauseRecordButton.setText(getString(R.string.start));
+
         mRecordingImage = findViewById(R.id.activity_record_record_image_ui);
         mRecordingImageLabel = findViewById(R.id.activity_record_record_image_label_ui);
         mRsrpText = findViewById(R.id.activity_record_lte_rsrp_text_ui);
@@ -400,7 +425,10 @@ public abstract class RecordActivity extends AppCompatActivity {
     }
 
     private void setPauseRecordingState() {
-        mPauseRecordButton.setText(getString(R.string.activity_record_resume_button_text));
+        // Set resume or start depending on if initial data present.
+        final String activeRecordingText = count > 0 ? getString(R.string.resume) : getString(R.string.start);
+        mPauseRecordButton.setText(activeRecordingText);
+
         mPauseRecordButton.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.ic_new_recording), null, null, null);
         mRecordingImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_recording_paused));
         mRecordingImageLabel.setText(R.string.activity_record_recording_paused_image_label_text);
