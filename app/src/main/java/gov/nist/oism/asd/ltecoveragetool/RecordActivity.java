@@ -146,7 +146,7 @@ public abstract class RecordActivity extends AppCompatActivity {
         currentFloor = Math.max(0, i); // Currently 0 baseline
         final String title = String.format("%s (Floor %s)",
                 getString(R.string.record_floor_plan),
-                FLOOR_OPTIONS[i - 1]);
+                i == 0 ? "G" : i);
         setTitle(title);
     }
 
