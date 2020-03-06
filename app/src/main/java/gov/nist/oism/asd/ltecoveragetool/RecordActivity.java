@@ -74,6 +74,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
+import gov.nist.oism.asd.ltecoveragetool.util.PrefManager;
 
 import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.match;
@@ -81,6 +82,7 @@ import static com.mapbox.mapboxsdk.style.expressions.Expression.rgb;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.FLOOR_OPTION;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_FLOOR_OPTION;
 
 /*
  * Base activity for map-based signal strength recording.
@@ -128,12 +130,26 @@ public abstract class RecordActivity extends AppCompatActivity {
     public JSONObject rawFeature;
 
     private String provider;
+    private PrefManager prefManager;
 
+    protected void showTutorialDialog(String title, String tutorial, String pref) {
+        if (!prefManager.getBoolPreference(pref)) {
+            AlertDialog alert = new AlertDialog.Builder(this)
+                    .setTitle(title)
+                    .setMessage(tutorial)
+                    .setPositiveButton(this.getString(R.string.got_it), (dialog, which) -> {
+                        prefManager.saveBoolPreference(pref, true);
+                        dialog.dismiss();
+                    })
+                    .create();
+            alert.show();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        prefManager = new PrefManager(this);
         provider = mapMode.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
 
         setupLocation();

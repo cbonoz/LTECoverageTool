@@ -10,6 +10,10 @@ public class MapMode {
     public static final String NO_GPS_OPTION = "no_gps_option";
     public static final String FLOOR_OPTION = "floor_option";
 
+    public static final String SEEN_FLOOR_OPTION = "seen_floor_option";
+    public static final String SEEN_GPS_OPTION = "seen_gps_option";
+    public static final String SEEN_NO_GPS_OPTION = "seen_no_gps_option";
+
     public static final String getHumanReadableOption(String option) {
         switch (option) {
             case NO_GPS_OPTION:

@@ -5,7 +5,10 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+
 import android.util.Log;
 import android.view.View;
 
@@ -32,12 +35,18 @@ import gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity;
 import gov.nist.oism.asd.ltecoveragetool.R;
 import gov.nist.oism.asd.ltecoveragetool.RecordActivity;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
+import gov.nist.oism.asd.ltecoveragetool.util.PrefManager;
+
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_FLOOR_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_GPS_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_NO_GPS_OPTION;
 
 /**
  * Add a GeoJSON line to a map.
  * Used for both modes 1 and 2.
  */
-public class GpsLineLayerActivity extends RecordActivity  implements OnMapReadyCallback, LocationListener {
+public class GpsLineLayerActivity extends RecordActivity implements OnMapReadyCallback, LocationListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +57,12 @@ public class GpsLineLayerActivity extends RecordActivity  implements OnMapReadyC
         LteLog.d("selected_mapmode", mapMode);
 
         super.onCreate(savedInstanceState);
+
+        if (GPS_OPTION.equals(mapMode)) {
+            showTutorialDialog(getString(R.string.record_gps_tutorial), getString(R.string.gps_tutorial), SEEN_GPS_OPTION);
+        } else {
+            showTutorialDialog(getString(R.string.record_no_gps_tutorial), getString(R.string.no_gps_tutorial), SEEN_NO_GPS_OPTION);
+        }
 
 
         // This contains the MapView in XML and needs to be called after the access token is configured.
@@ -116,17 +131,17 @@ public class GpsLineLayerActivity extends RecordActivity  implements OnMapReadyC
 
     @Override
     public void onProviderDisabled(String provider) {
-        Log.d("Latitude","disable");
+        Log.d("Latitude", "disable");
     }
 
     @Override
     public void onProviderEnabled(String provider) {
-        Log.d("Latitude","enable");
+        Log.d("Latitude", "enable");
     }
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-        Log.d("Latitude","status");
+        Log.d("Latitude", "status");
     }
 
 
@@ -188,7 +203,7 @@ public class GpsLineLayerActivity extends RecordActivity  implements OnMapReadyC
     /**
      * Initialize the Maps SDK's LocationComponent
      */
-    @SuppressWarnings( {"MissingPermission"})
+    @SuppressWarnings({"MissingPermission"})
     private void enableLocationComponent(@NonNull Style loadedMapStyle) {
         // Check if permissions are enabled and if not request
         if (PermissionsManager.areLocationPermissionsGranted(this)) {

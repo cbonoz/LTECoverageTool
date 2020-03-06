@@ -126,4 +126,13 @@
     <string name="start_floor_plan">To upload your floor plan, click 4 bounds on the map</string>
 
 
+    <string name="floor_plan_tutorial">In floor plan mode, you can record LTE strength on a walkthrough across multiple floors. You will be prompted to confirm your location, then lay floor plan images down at your location for up to 3 floors.</string>
+    <string name="gps_tutorial">In GPS recording mode, you can record LTE strength along a walkthrough, using GPS, with a map overlay.</string>
+    <string name="no_gps_tutorial">In non-GPS recording mode, you can record LTE strength along a walkthrough, using the non-GPS modes of location which we take from your phone, with a map overlay.</string>
+    <string name="record_floor_plan">Record floor walkthrough</string>
+    <string name="record_gps_tutorial">Record GPS walkthrough</string>
+    <string name="record_no_gps_tutorial">Record walkthrough without GPS</string>
+    <string name="got_it">Got it</string>
+
+
 </resources>

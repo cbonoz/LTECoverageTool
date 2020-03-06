@@ -8,6 +8,8 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.Button;
@@ -16,7 +18,6 @@ import android.widget.Toast;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
-import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.geometry.LatLngQuad;
 import com.mapbox.mapboxsdk.maps.MapView;
@@ -36,9 +37,14 @@ import java.util.List;
 import gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity;
 import gov.nist.oism.asd.ltecoveragetool.R;
 import gov.nist.oism.asd.ltecoveragetool.RecordActivity;
+import gov.nist.oism.asd.ltecoveragetool.util.PrefManager;
 
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleRadius;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_FLOOR_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_GPS_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_NO_GPS_OPTION;
 
 /**
  * Tap the map in four locations to set the bounds for an image that is selected from the device's gallery
@@ -47,6 +53,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleRadius;
  */
 public class FloorPlanActivity extends RecordActivity implements
         OnMapReadyCallback, MapboxMap.OnMapClickListener {
+
 
     private View levelButtons;
 
@@ -68,10 +75,14 @@ public class FloorPlanActivity extends RecordActivity implements
 
         super.onCreate(savedInstanceState);
 
+        showTutorialDialog(getString(R.string.record_floor_plan), getString(R.string.floor_plan_tutorial), SEEN_FLOOR_OPTION);
+
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
     }
+
+
 
     @Override
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
