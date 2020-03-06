@@ -7,13 +7,13 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-
+import android.util.SparseArray;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.Button;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
@@ -32,19 +32,18 @@ import com.mapbox.mapboxsdk.style.sources.ImageSource;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity;
 import gov.nist.oism.asd.ltecoveragetool.R;
 import gov.nist.oism.asd.ltecoveragetool.RecordActivity;
-import gov.nist.oism.asd.ltecoveragetool.util.PrefManager;
+import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleRadius;
-import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_FLOOR_OPTION;
-import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_GPS_OPTION;
-import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_NO_GPS_OPTION;
 
 /**
  * Tap the map in four locations to set the bounds for an image that is selected from the device's gallery
@@ -110,11 +109,39 @@ public class FloorPlanActivity extends RecordActivity implements
             final int floor = i + 1;
             button.setOnClickListener(view -> {
                 Toast.makeText(getApplicationContext(), "Floor " + button.getText(), Toast.LENGTH_SHORT).show();
+                renderFloorImages(getCurrentFloor(), floor);
                 setCurrentFloor(floor);
             });
         }
 
         setCurrentFloor(1);
+    }
+
+    private void renderFloorImages(int oldFloor, int newFloor) {
+        List<SourceLayer> oldSourceLayers = floorImageMap.get(oldFloor, new ArrayList<>());
+        for (SourceLayer layer : oldSourceLayers) {
+            mapboxMap.getStyle(style -> {
+                try {
+                    style.removeLayer(layer.getRasterLayer());
+                    style.removeSource(layer.getImageSource());
+                } catch (Exception e) {
+                    LteLog.e("render", "error removing layer" ,e);
+                }
+            });
+        }
+
+        List<SourceLayer> newSourceLayers = floorImageMap.get(newFloor, new ArrayList<>());
+        for (SourceLayer layer : newSourceLayers) {
+            mapboxMap.getStyle(style -> {
+                try {
+                style.addLayer(layer.getRasterLayer());
+                style.addSource(layer.getImageSource());
+                } catch (Exception e) {
+                    LteLog.e("render", "error adding layer" ,e);
+                }
+            });
+        }
+
     }
 
     @Override
@@ -182,6 +209,8 @@ public class FloorPlanActivity extends RecordActivity implements
         ));
     }
 
+    protected final SparseArray<List<SourceLayer>> floorImageMap = new SparseArray<>();
+
     /**
      * Calling onActivityResult() to handle the return to the example from the device's image galleyr picker
      */
@@ -206,12 +235,18 @@ public class FloorPlanActivity extends RecordActivity implements
                             Bitmap bitmapOfSelectedImage = BitmapFactory.decodeStream(imageStream);
 
                             // Add the imageSource to the map
-                            style.addSource(
-                                    new ImageSource(ID_IMAGE_SOURCE + imageCountIndex, quad, bitmapOfSelectedImage));
+                            ImageSource source = new ImageSource(ID_IMAGE_SOURCE + imageCountIndex, quad, bitmapOfSelectedImage);
+                            style.addSource(source);
 
                             // Create a raster layer and use the imageSource's ID as the layer's data// Add the layer to the map
-                            style.addLayer(new RasterLayer(ID_IMAGE_LAYER + imageCountIndex,
-                                    ID_IMAGE_SOURCE + imageCountIndex));
+                            RasterLayer layer = new RasterLayer(ID_IMAGE_LAYER + imageCountIndex,
+                                    ID_IMAGE_SOURCE + imageCountIndex);
+                            style.addLayer(layer);
+
+                            // Append the source layer to this floor.
+                            List<SourceLayer> sourceLayers = floorImageMap.get(getCurrentFloor(), new ArrayList<>());
+                            sourceLayers.add(new SourceLayer(source, layer));
+                            floorImageMap.put(getCurrentFloor(), sourceLayers);
 
                             // Reset lists in preparation for adding more images
                             boundsFeatureList = new ArrayList<>();

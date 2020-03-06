@@ -43,6 +43,7 @@ import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -75,6 +76,7 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import gov.nist.oism.asd.ltecoveragetool.maps.SourceLayer;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 import gov.nist.oism.asd.ltecoveragetool.util.PrefManager;
 
