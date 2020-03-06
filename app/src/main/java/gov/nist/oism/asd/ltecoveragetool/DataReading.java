@@ -37,8 +37,10 @@ class DataReading implements Serializable {
     private double lng;
     private double elevation;
     private double acc;
+    private int floor;
 
     DataReading() {
+        this.floor = -1;
         this.timestamp = new Date();
         this.rsrp = UNAVAILABLE;
         this.rsrq = UNAVAILABLE;
@@ -57,6 +59,7 @@ class DataReading implements Serializable {
         this.lng = dataReading.lng;
         this.lat = dataReading.lat;
         this.elevation = dataReading.elevation;
+        this.floor = dataReading.floor;
     }
 
     Date getTimestamp() {
@@ -117,5 +120,13 @@ class DataReading implements Serializable {
 
     double getElevation() {
         return elevation;
+    }
+
+    public int getFloor() {
+        return floor;
+    }
+
+    public void setFloor(int floor) {
+        this.floor = floor;
     }
 }

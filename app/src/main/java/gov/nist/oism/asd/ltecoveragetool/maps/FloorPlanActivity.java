@@ -114,6 +114,8 @@ public class FloorPlanActivity extends RecordActivity implements
                 setCurrentFloor(floor);
             });
         }
+
+        setCurrentFloor(1);
     }
 
     @Override

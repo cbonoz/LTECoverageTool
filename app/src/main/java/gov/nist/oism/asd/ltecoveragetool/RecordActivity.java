@@ -18,7 +18,6 @@ package gov.nist.oism.asd.ltecoveragetool;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -26,10 +25,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.telephony.CellIdentityLte;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
@@ -71,7 +72,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -137,10 +137,14 @@ public abstract class RecordActivity extends AppCompatActivity {
     private PrefManager prefManager;
 
     protected int numFloors = 3;
-    private int currentFloor = 0;
+    private int currentFloor = -1;
 
     protected void setCurrentFloor(int i) {
-        currentFloor = i;
+        currentFloor = Math.max(0, i); // Currently 0 baseline
+        final String title = String.format("%s (Floor %s)",
+                getString(R.string.record_floor_plan),
+                FLOOR_OPTIONS[i - 1]);
+        setTitle(title);
     }
 
     protected int getCurrentFloor() {
@@ -302,6 +306,8 @@ public abstract class RecordActivity extends AppCompatActivity {
                 if (dataReadingCopy.getRsrq() == DataReading.UNAVAILABLE) {
                     dataReadingCopy.setRsrq(DataReading.LOW_RSRQ);
                 }
+
+                dataReadingCopy.setFloor(currentFloor);
 
                 if (isRecording()) {
                     mDataReadings.add(new DataReading(dataReadingCopy));
