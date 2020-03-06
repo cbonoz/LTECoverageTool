@@ -163,7 +163,6 @@ public class GpsLineLayerActivity extends RecordActivity implements OnMapReadyCa
         mapboxMap.setStyle(Style.OUTDOORS,
                 style -> {
                     mapstyle = style;
-                    initRouteCoordinates();
 
                     style.addSource(new GeoJsonSource("line-source",
                             FeatureCollection.fromFeatures(new Feature[]{Feature.fromGeometry(

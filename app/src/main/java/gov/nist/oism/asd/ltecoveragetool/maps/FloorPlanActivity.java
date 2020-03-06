@@ -86,7 +86,6 @@ public class FloorPlanActivity extends RecordActivity implements
     @Override
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         levelButtons = findViewById(R.id.floor_button_layout);
-        initRouteCoordinates();
         this.mapboxMap = mapboxMap;
 
 

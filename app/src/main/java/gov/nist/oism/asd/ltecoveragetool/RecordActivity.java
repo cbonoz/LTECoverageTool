@@ -100,6 +100,7 @@ public abstract class RecordActivity extends AppCompatActivity {
     private static final Object MUTEX = new Object();
     private static final long SAMPLE_RATE = 2000; // ms
     private static final int ANIMATION_MS = 3000;
+    private static final int MY_PERMISSIONS_REQUEST_FINE_LOCATION = 100;
     protected static String mapMode;
 
     protected MapView mapView;
@@ -175,6 +176,8 @@ public abstract class RecordActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initRouteCoordinates();
+
         prefManager = new PrefManager(this);
         provider = mapMode.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
         setTitle(getHumanReadableOption(mapMode));
@@ -338,26 +341,46 @@ public abstract class RecordActivity extends AppCompatActivity {
         }, 1000, SAMPLE_RATE);
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_FINE_LOCATION:
+                Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show();
+                break;
+        }
+    }
 
     private void setupLocation() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            Toast.makeText(this, "Location permission not granted, please grant permission", Toast.LENGTH_LONG).show();
-            return;
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                Toast.makeText(this, "Location permission not granted, please grant permission", Toast.LENGTH_LONG).show();
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_FINE_LOCATION);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
         }
+        // Permission already granted
 //        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, this);
     }
 
     protected void initRouteCoordinates() {
         // Create a list to store our line coordinates.
         routeCoordinates = new ArrayList<>();
+
+        // Sample data
 //        routeCoordinates.add(Point.fromLngLat(-118.39439114221236, 33.397676454651766));
 //        routeCoordinates.add(Point.fromLngLat(-118.39421054012902, 33.39769799454838));
 //        routeCoordinates.add(Point.fromLngLat(-118.39408583869053, 33.39761901490136));
@@ -449,7 +472,7 @@ public abstract class RecordActivity extends AppCompatActivity {
         mRecordingImage.startAnimation(mRecordingImageAnimation);
     }
 
-    private Location getLastKnownLocation() {
+    private Location getLastBestLocation() {
         List<String> providers = locationManager.getProviders(true);
         Location bestLocation = null;
         for (String provider : providers) {
@@ -500,7 +523,7 @@ public abstract class RecordActivity extends AppCompatActivity {
                     mCurrentReading.setPci(DataReading.PCI_NA);
                     try {
 
-                        final Location lastKnownLocation = locationManager.getLastKnownLocation(provider); // or getLastKnownLocation() for provider agnostic.
+                        final Location lastKnownLocation = mapMode.equals(GPS_OPTION) ? getLastBestLocation() : locationManager.getLastKnownLocation(provider); // or getLastKnownLocation() for provider agnostic.
                         if (lastKnownLocation == null) {
                             return;
                         }
