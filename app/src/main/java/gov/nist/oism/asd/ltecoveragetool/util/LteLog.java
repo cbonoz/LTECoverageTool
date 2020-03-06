@@ -18,9 +18,11 @@ package gov.nist.oism.asd.ltecoveragetool.util;
 
 import android.util.Log;
 
+import gov.nist.oism.asd.ltecoveragetool.BuildConfig;
+
 public class LteLog {
 
-    private static final boolean LOGGING = false;
+    private static final boolean LOGGING = BuildConfig.DEBUG; // Log in debug mode.
 
     public static void v(String tag, String message) {
         if (LOGGING) {

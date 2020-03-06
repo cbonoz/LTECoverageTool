@@ -127,10 +127,14 @@ public abstract class RecordActivity extends AppCompatActivity {
 
     public JSONObject rawFeature;
 
+    private String provider;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        provider = mapMode.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
 
         setupLocation();
 
@@ -445,7 +449,6 @@ public abstract class RecordActivity extends AppCompatActivity {
                     mCurrentReading.setRsrq(rsrq);
                     mCurrentReading.setPci(DataReading.PCI_NA);
                     try {
-                        final String provider = mapMode.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
 
                         final Location lastKnownLocation = locationManager.getLastKnownLocation(provider); // or getLastKnownLocation() for provider agnostic.
                         if (lastKnownLocation == null) {
@@ -500,7 +503,7 @@ public abstract class RecordActivity extends AppCompatActivity {
                                 }
                             }
                         }
-                        String finalGrade = grade;
+                        final String finalGrade = grade;
                         if (!mapMode.equals(FLOOR_OPTION)) {
                             // TODO: allow multiple style overlays for floor.
                             mapboxMap.setStyle(Style.OUTDOORS,
