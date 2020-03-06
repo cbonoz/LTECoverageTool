@@ -5,7 +5,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 
@@ -42,7 +42,6 @@ public class GpsLineLayerActivity extends RecordActivity  implements OnMapReadyC
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // These items should be set up before the parent onCreate is called.
-        Mapbox.getInstance(this, getString(R.string.testing_token));
         setContentView(R.layout.activity_record_mapping);
         findViewById(R.id.floor_button_layout).setVisibility(View.GONE); // hide floor buttons.
         mapMode = getIntent().getStringExtra(NewRecordingActivity.MAP_MODE_KEY);

@@ -17,6 +17,7 @@
 * Run project on device.
 
 
+
 ### TODO: Notes from 2/10
 1. Mode 1 - First function wasn’t quite working as in the original. Was using a google pixel 2 to test.
 2. Mode 2 - Using wifi data (was about a half mile off from correct values). Suggest combining with some other source to improve this. Not accurate enough currently. Couple the inertial sensors (IMU, etc.) to get a more accurate route.

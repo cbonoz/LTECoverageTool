@@ -7,7 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.Button;
@@ -63,7 +63,6 @@ public class FloorPlanActivity extends RecordActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // These items should be set up before the parent onCreate is called.
-        Mapbox.getInstance(this, getString(R.string.testing_token));
         setContentView(R.layout.activity_record_mapping);
         mapMode = getIntent().getStringExtra(NewRecordingActivity.MAP_MODE_KEY);
 
