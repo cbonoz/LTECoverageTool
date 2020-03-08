@@ -17,6 +17,7 @@
 package gov.nist.oism.asd.ltecoveragetool;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -53,13 +54,26 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.mapbox.android.core.location.LocationEngine;
+import com.mapbox.android.core.location.LocationEngineCallback;
+import com.mapbox.android.core.location.LocationEngineProvider;
+import com.mapbox.android.core.location.LocationEngineRequest;
+import com.mapbox.android.core.location.LocationEngineResult;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
+import com.mapbox.mapboxsdk.location.modes.CameraMode;
+import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
@@ -70,6 +84,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -80,6 +95,7 @@ import gov.nist.oism.asd.ltecoveragetool.maps.SourceLayer;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 import gov.nist.oism.asd.ltecoveragetool.util.PrefManager;
 
+import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.match;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.rgb;
@@ -93,7 +109,7 @@ import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.getHumanReadableOpt
 /*
  * Base activity for map-based signal strength recording.
  */
-public abstract class RecordActivity extends AppCompatActivity {
+public abstract class RecordActivity extends AppCompatActivity{
 
     public static final String DATA_READINGS_KEY = "data_readings_key";
     public static final String OFFSET_KEY = "offset_key";
@@ -475,6 +491,7 @@ public abstract class RecordActivity extends AppCompatActivity {
     }
 
     private Location getLastBestLocation() {
+        /*
         List<String> providers = locationManager.getProviders(true);
         Location bestLocation = null;
         for (String provider : providers) {
@@ -492,8 +509,22 @@ public abstract class RecordActivity extends AppCompatActivity {
                 bestLocation = l;
             }
         }
-        return bestLocation;
+        return bestLocation;*/
+        if(lastLat != 0 && lastLng != 0)
+        {
+            Location location = new Location("");
+            location.setLatitude(lastLat);
+            location.setLongitude(lastLng);
+            return location;
+        }
+        else return null;
     }
+    public void getLastLocation() {
+        // Get last known recent location using new Google Play Services SDK (v11+)
+        FusedLocationProviderClient locationClient = getFusedLocationProviderClient(this);
+
+    }
+
 
     private class SignalStrengthListener extends PhoneStateListener {
 
@@ -524,8 +555,8 @@ public abstract class RecordActivity extends AppCompatActivity {
                     mCurrentReading.setRsrq(rsrq);
                     mCurrentReading.setPci(DataReading.PCI_NA);
                     try {
-
-                        final Location lastKnownLocation = mapMode.equals(GPS_OPTION) ? getLastBestLocation() : locationManager.getLastKnownLocation(provider); // or getLastKnownLocation() for provider agnostic.
+                        //final Location lastKnownLocation = mapMode.equals(GPS_OPTION) ? getLastBestLocation() : locationManager.getLastKnownLocation(provider); // or getLastKnownLocation() for provider agnostic.
+                        Location lastKnownLocation = getLastBestLocation();
                         if (lastKnownLocation == null) {
                             return;
                         }
