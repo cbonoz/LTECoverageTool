@@ -121,14 +121,14 @@ public class FloorPlanActivity extends RecordActivity implements
         }
 
         mapboxMap.getStyle(style -> {
-            List<String> oldLayerIds = floorLayers.get(oldFloor);
+            List<String> oldLayerIds = floorLayers.get(oldFloor, new ArrayList<>());
             for (String layerId : oldLayerIds) {
                 Layer oldLayer = style.getLayer(layerId);
                 if (oldLayer != null) {
                     oldLayer.setProperties(visibility(NONE));
                 }
             }
-            List<String> newLayerIds = floorLayers.get(newFloor);
+            List<String> newLayerIds = floorLayers.get(newFloor, new ArrayList<>());
             for (String layerId : newLayerIds) {
                 Layer newLayer = style.getLayer(layerId);
                 if (newLayer != null) {
