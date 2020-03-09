@@ -121,15 +121,21 @@ public class FloorPlanActivity extends RecordActivity implements
         }
 
         mapboxMap.getStyle(style -> {
-            Layer oldLayer = style.getLayer(getImageLayerId(oldFloor));
-            if (oldLayer != null) {
-                oldLayer.setProperties(visibility(NONE));
+            List<String> oldLayerIds = floorLayers.get(oldFloor);
+            for (String layerId : oldLayerIds) {
+                Layer oldLayer = style.getLayer(layerId);
+                if (oldLayer != null) {
+                    oldLayer.setProperties(visibility(NONE));
+                }
             }
-            Layer newLayer = style.getLayer(getImageLayerId(newFloor));
-            LteLog.i("render_images",  String.format("%s,%s,%s,%s", oldFloor , newFloor , oldLayer , newLayer));
-            if (newLayer != null) {
-                newLayer.setProperties(visibility(VISIBLE));
+            List<String> newLayerIds = floorLayers.get(newFloor);
+            for (String layerId : newLayerIds) {
+                Layer newLayer = style.getLayer(layerId);
+                if (newLayer != null) {
+                    newLayer.setProperties(visibility(VISIBLE));
+                }
             }
+            LteLog.i("render_images", String.format("%s,%s,%s,%s", oldFloor, newFloor, oldLayerIds, newLayerIds));
         });
 
     }
@@ -199,7 +205,7 @@ public class FloorPlanActivity extends RecordActivity implements
         ));
     }
 
-    protected final SparseArray<List<SourceLayer>> floorImageMap = new SparseArray<>();
+    protected final SparseArray<List<String>> floorLayers = new SparseArray<>();
 
     /**
      * Calling onActivityResult() to handle the return to the example from the device's image galleyr picker
@@ -229,14 +235,14 @@ public class FloorPlanActivity extends RecordActivity implements
                             style.addSource(source);
 
                             // Create a raster layer and use the imageSource's ID as the layer's data// Add the layer to the map
-                            RasterLayer layer = new RasterLayer(getImageLayerId(getCurrentFloor()), ID_IMAGE_SOURCE + imageCountIndex);
+                            RasterLayer layer = new RasterLayer(getImageLayerId(imageCountIndex), ID_IMAGE_SOURCE + imageCountIndex);
                             layer.setSourceLayer(getImageLayerId(getCurrentFloor()));
                             style.addLayer(layer);
 
                             // Append the source layer to this floor.
-//                            List<SourceLayer> sourceLayers = floorImageMap.get(getCurrentFloor(), new ArrayList<>());
-//                            sourceLayers.add(new SourceLayer(source, layer));
-//                            floorImageMap.put(getCurrentFloor(), sourceLayers);
+                            List<String> sourceLayers = floorLayers.get(getCurrentFloor(), new ArrayList<>());
+                            sourceLayers.add(layer.getId());
+                            floorLayers.put(getCurrentFloor(), sourceLayers);
 
                             // Reset lists in preparation for adding more images
                             boundsFeatureList = new ArrayList<>();

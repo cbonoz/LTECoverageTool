@@ -227,8 +227,6 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
         mapboxMap.getStyle(style -> {
             if (mapSnapshotter == null) {
                 // Initialize snapshotter with map dimensions and given bounds
-
-                LteLog.i("startSnapshot", String.format("%s %s", imageLayer, lineLayer));
                 MapSnapshotter.Options options =
                         new MapSnapshotter.Options(width, height)
                                 .withRegion(latLngBounds)
@@ -662,9 +660,6 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
 
     @Override
     public void onLocationChanged(Location location) {
-        if (View.VISIBLE == findLocationBanner.getVisibility()) {
-            findLocationBanner.setVisibility(View.GONE);
-        }
         lastLat = location.getLatitude();
         lastLng = location.getLongitude();
         LteLog.d("update loc", String.format(Locale.US, "%f, %f", lastLat, lastLng));
@@ -796,6 +791,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                         lastElevation = lastKnownLocation.getAltitude();
 
                         if (!setInitialPosition && canSetCameraPosition()) {
+                            initializeUserLocationOnMap();
                             setCameraPosition(new LatLng(lastLat, lastLng));
                             setInitialPosition = true;
                         }
@@ -811,15 +807,6 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                 LteLog.i(TAG, String.format(Locale.getDefault(), "rsrp: %d, rsrq: %d", rsrp, rsrq));
 
                 if (mapboxMap != null) {
-                    Location tmp = new Location("");
-                    tmp.setLatitude(lastLat);
-                    tmp.setLongitude(lastLng);
-                    try {
-                        mapboxMap.getLocationComponent().forceLocationUpdate(tmp);
-                    } catch (Exception e) {
-                        LteLog.e("error forcing location update", e.getMessage(), e);
-                    }
-
                     routeCoordinates.add(Point.fromLngLat(lastLng, lastLat));
                     count++;
                     if (routeCoordinates.size() >= 2 && rawFeature != null && rawFeature.has("features")) {
@@ -827,16 +814,14 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
 
                         String grade = "";
                         if (mDataReadings != null) {
-                            for (DataReading dataReading : mDataReadings) {
-                                if (rsrp >= -95) {
-                                    grade = "top";
-                                } else if (rsrp < -95 && rsrp >= -103) {
-                                    grade = "middlelow";
-                                } else if (rsrp < -103 && rsrp >= -110) {
-                                    grade = "middle";
-                                } else {
-                                    grade = "low";
-                                }
+                            if (rsrp >= -95) {
+                                grade = "top";
+                            } else if (rsrp >= -103) {
+                                grade = "middlelow";
+                            } else if (rsrp >= -110) {
+                                grade = "middle";
+                            } else {
+                                grade = "low";
                             }
                         }
                         final String finalGrade = grade;
@@ -909,6 +894,20 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                 .tilt(0) // Set the camera tilt
                 .build();
         mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), ANIMATION_MS);
+    }
+
+    private void initializeUserLocationOnMap() {
+        if (View.VISIBLE == findLocationBanner.getVisibility()) {
+            findLocationBanner.setVisibility(View.GONE);
+        }
+        Location tmp = new Location("");
+        tmp.setLatitude(lastLat);
+        tmp.setLongitude(lastLng);
+        try {
+            mapboxMap.getLocationComponent().forceLocationUpdate(tmp);
+        } catch (Exception e) {
+            LteLog.e("error forcing location update", e.getMessage(), e);
+        }
     }
 
 }
