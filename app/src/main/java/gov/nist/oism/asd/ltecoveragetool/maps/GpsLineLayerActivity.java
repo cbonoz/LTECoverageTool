@@ -1,6 +1,5 @@
 package gov.nist.oism.asd.ltecoveragetool.maps;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.location.Location;
@@ -8,33 +7,21 @@ import android.location.LocationListener;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.mapbox.android.core.location.LocationEngine;
-import com.mapbox.android.core.location.LocationEngineCallback;
-import com.mapbox.android.core.location.LocationEngineProvider;
-import com.mapbox.android.core.location.LocationEngineRequest;
-import com.mapbox.android.core.location.LocationEngineResult;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.LineString;
-import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.location.LocationComponent;
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
 import com.mapbox.mapboxsdk.location.modes.CameraMode;
@@ -46,24 +33,16 @@ import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
-import com.yayandroid.locationmanager.configuration.DefaultProviderConfiguration;
-import com.yayandroid.locationmanager.configuration.GooglePlayServicesConfiguration;
-import com.yayandroid.locationmanager.configuration.LocationConfiguration;
-import com.yayandroid.locationmanager.configuration.PermissionConfiguration;
-import com.yayandroid.locationmanager.constants.ProviderType;
 
-import java.lang.ref.WeakReference;
 import java.util.Locale;
 
 import gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity;
 import gov.nist.oism.asd.ltecoveragetool.R;
 import gov.nist.oism.asd.ltecoveragetool.RecordActivity;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
-import gov.nist.oism.asd.ltecoveragetool.util.PrefManager;
 
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
-import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_FLOOR_OPTION;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_GPS_OPTION;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_NO_GPS_OPTION;
 
@@ -89,9 +68,9 @@ public class GpsLineLayerActivity extends RecordActivity implements OnMapReadyCa
         super.onCreate(savedInstanceState);
 
         if (GPS_OPTION.equals(mapMode)) {
-            showTutorialDialog(getString(R.string.record_gps_tutorial), getString(R.string.gps_tutorial), SEEN_GPS_OPTION);
+            showTutorialDialog(this, getString(R.string.record_gps_tutorial), getString(R.string.gps_tutorial), SEEN_GPS_OPTION);
         } else {
-            showTutorialDialog(getString(R.string.record_no_gps_tutorial), getString(R.string.no_gps_tutorial), SEEN_NO_GPS_OPTION);
+            showTutorialDialog(this, getString(R.string.record_no_gps_tutorial), getString(R.string.no_gps_tutorial), SEEN_NO_GPS_OPTION);
         }
 
 

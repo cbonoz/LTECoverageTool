@@ -74,7 +74,7 @@ public class FloorPlanActivity extends RecordActivity implements
 
         super.onCreate(savedInstanceState);
 
-        showTutorialDialog(getString(R.string.record_floor_plan), getString(R.string.floor_plan_tutorial), SEEN_FLOOR_OPTION);
+        showTutorialDialog(this, getString(R.string.record_floor_plan), getString(R.string.floor_plan_tutorial), SEEN_FLOOR_OPTION);
 
         mapView = findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
@@ -95,7 +95,7 @@ public class FloorPlanActivity extends RecordActivity implements
             imageCountIndex = 0;
             initCircleSource(style);
             initCircleLayer(style);
-            Toast.makeText(FloorPlanActivity.this, getString(R.string.start_floor_plan), Toast.LENGTH_LONG).show();
+
         });
 
         initButtons();

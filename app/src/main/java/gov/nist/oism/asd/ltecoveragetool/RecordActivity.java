@@ -17,7 +17,6 @@
 package gov.nist.oism.asd.ltecoveragetool;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -26,12 +25,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.telephony.CellIdentityLte;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
@@ -44,7 +37,6 @@ import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -54,26 +46,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.mapbox.android.core.location.LocationEngine;
-import com.mapbox.android.core.location.LocationEngineCallback;
-import com.mapbox.android.core.location.LocationEngineProvider;
-import com.mapbox.android.core.location.LocationEngineRequest;
-import com.mapbox.android.core.location.LocationEngineResult;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.location.LocationComponent;
-import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
-import com.mapbox.mapboxsdk.location.modes.CameraMode;
-import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
-import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
@@ -84,14 +69,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import gov.nist.oism.asd.ltecoveragetool.maps.SourceLayer;
+import gov.nist.oism.asd.ltecoveragetool.maps.FloorPlanActivity;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 import gov.nist.oism.asd.ltecoveragetool.util.PrefManager;
 
@@ -159,6 +143,7 @@ public abstract class RecordActivity extends AppCompatActivity{
     private int currentFloor = -1;
 
     protected void setCurrentFloor(int i) {
+        i -= 1;
         currentFloor = Math.max(0, i); // Currently 0 baseline
         final String title = String.format("%s (Floor %s)",
                 getString(R.string.record_floor_plan),
@@ -171,7 +156,7 @@ public abstract class RecordActivity extends AppCompatActivity{
     }
 
 
-    protected void showTutorialDialog(String title, String tutorial, String pref) {
+    protected void showTutorialDialog(Context context, String title, String tutorial, String pref) {
         if (!prefManager.getBoolPreference(pref)) {
             AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this)
                     .setTitle(title)
@@ -180,6 +165,9 @@ public abstract class RecordActivity extends AppCompatActivity{
                         // show the dialog for floor option every time.
                         if (!SEEN_FLOOR_OPTION.equals(pref)) {
                             prefManager.saveBoolPreference(pref, true);
+                        } else {
+                            // Show intro for floor plan activity.
+                            Toast.makeText(context, getString(R.string.start_floor_plan), Toast.LENGTH_LONG).show();
                         }
                         dialog.dismiss();
                     });
