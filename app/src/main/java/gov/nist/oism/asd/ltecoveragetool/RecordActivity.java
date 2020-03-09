@@ -78,7 +78,6 @@ import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.snapshotter.MapSnapshotter;
-import com.mapbox.mapboxsdk.style.layers.Layer;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
@@ -227,8 +226,6 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
         mapboxMap.getStyle(style -> {
             if (mapSnapshotter == null) {
                 // Initialize snapshotter with map dimensions and given bounds
-
-                LteLog.i("startSnapshot", String.format("%s %s", imageLayer, lineLayer));
                 MapSnapshotter.Options options =
                         new MapSnapshotter.Options(width, height)
                                 .withRegion(latLngBounds)
@@ -243,22 +240,53 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                 mapSnapshotter.setCameraPosition(mapboxMap.getCameraPosition());
             }
 
+            mapboxMap.snapshot(snapshot -> {
+                shareBitmap(snapshot);
+                hasStartedSnapshotGeneration = false;
+            });
+
+            /*
             mapSnapshotter.start(snapshot -> {
+//                Bitmap bitmapOfMapSnapshotImage = snapshot.getBitmap();
+                Bitmap bitmapOfMapSnapshotImage = takeScreenshot();
+                if (bitmapOfMapSnapshotImage == null) {
+                    makeToast("Unable to take screenshot", Toast.LENGTH_SHORT);
+                    hasStartedSnapshotGeneration = false;
+                    return;
+                }
 
-                Bitmap bitmapOfMapSnapshotImage = snapshot.getBitmap();
-
-                Uri bmpUri = getLocalBitmapUri(bitmapOfMapSnapshotImage);
-
-                Intent shareIntent = new Intent();
-                shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
-                shareIntent.setType("image/png");
-                shareIntent.setAction(Intent.ACTION_SEND);
-                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivity(Intent.createChooser(shareIntent, "Share map image"));
+                shareBitmap(bitmapOfMapSnapshotImage);
 
                 hasStartedSnapshotGeneration = false;
             });
+            */
         });
+    }
+
+    private void shareBitmap(Bitmap bitmap) {
+        Uri bmpUri = getLocalBitmapUri(bitmap);
+        Intent shareIntent = new Intent();
+        shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
+        shareIntent.setType("image/png");
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(Intent.createChooser(shareIntent, "Share map image"));
+    }
+
+    private Bitmap takeScreenshot() {
+
+        try {
+           // create bitmap screen capture
+            View v1 = getWindow().getDecorView().getRootView();
+            v1.setDrawingCacheEnabled(true);
+            Bitmap bitmap = Bitmap.createBitmap(v1.getDrawingCache());
+            v1.setDrawingCacheEnabled(false);
+            return bitmap;
+       } catch (Throwable e) {
+            // Several error may come out with file handling or DOM
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private Uri getLocalBitmapUri(Bitmap bmp) {
@@ -662,9 +690,6 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
 
     @Override
     public void onLocationChanged(Location location) {
-        if (View.VISIBLE == findLocationBanner.getVisibility()) {
-            findLocationBanner.setVisibility(View.GONE);
-        }
         lastLat = location.getLatitude();
         lastLng = location.getLongitude();
         LteLog.d("update loc", String.format(Locale.US, "%f, %f", lastLat, lastLng));
@@ -796,6 +821,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                         lastElevation = lastKnownLocation.getAltitude();
 
                         if (!setInitialPosition && canSetCameraPosition()) {
+                            initializeUserLocationOnMap();
                             setCameraPosition(new LatLng(lastLat, lastLng));
                             setInitialPosition = true;
                         }
@@ -811,15 +837,6 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                 LteLog.i(TAG, String.format(Locale.getDefault(), "rsrp: %d, rsrq: %d", rsrp, rsrq));
 
                 if (mapboxMap != null) {
-                    Location tmp = new Location("");
-                    tmp.setLatitude(lastLat);
-                    tmp.setLongitude(lastLng);
-                    try {
-                        mapboxMap.getLocationComponent().forceLocationUpdate(tmp);
-                    } catch (Exception e) {
-                        LteLog.e("error forcing location update", e.getMessage(), e);
-                    }
-
                     routeCoordinates.add(Point.fromLngLat(lastLng, lastLat));
                     count++;
                     if (routeCoordinates.size() >= 2 && rawFeature != null && rawFeature.has("features")) {
@@ -827,16 +844,14 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
 
                         String grade = "";
                         if (mDataReadings != null) {
-                            for (DataReading dataReading : mDataReadings) {
-                                if (rsrp >= -95) {
-                                    grade = "top";
-                                } else if (rsrp < -95 && rsrp >= -103) {
-                                    grade = "middlelow";
-                                } else if (rsrp < -103 && rsrp >= -110) {
-                                    grade = "middle";
-                                } else {
-                                    grade = "low";
-                                }
+                            if (rsrp >= -95) {
+                                grade = "top";
+                            } else if (rsrp >= -103) {
+                                grade = "middlelow";
+                            } else if (rsrp >= -110) {
+                                grade = "middle";
+                            } else {
+                                grade = "low";
                             }
                         }
                         final String finalGrade = grade;
@@ -909,6 +924,20 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                 .tilt(0) // Set the camera tilt
                 .build();
         mapboxMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), ANIMATION_MS);
+    }
+
+    private void initializeUserLocationOnMap() {
+        if (View.VISIBLE == findLocationBanner.getVisibility()) {
+            findLocationBanner.setVisibility(View.GONE);
+        }
+        Location tmp = new Location("");
+        tmp.setLatitude(lastLat);
+        tmp.setLongitude(lastLng);
+        try {
+            mapboxMap.getLocationComponent().forceLocationUpdate(tmp);
+        } catch (Exception e) {
+            LteLog.e("error forcing location update", e.getMessage(), e);
+        }
     }
 
 }
