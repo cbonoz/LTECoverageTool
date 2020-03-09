@@ -126,12 +126,16 @@
     <string name="start_floor_plan">To upload a floor plan image on the map, click the 4 corners in clockwise order</string>
 
 
-    <string name="floor_plan_tutorial">In floor plan mode, you can record LTE strength on a walkthrough across multiple floors. You will be prompted to confirm your location, then lay floor plan images down at your location for up to 3 floors.</string>
+<!--    Mode 1-->
     <string name="gps_tutorial">In GPS recording mode, you can record LTE strength along a walkthrough, using GPS, with a map overlay.</string>
-    <string name="no_gps_tutorial">In non-GPS recording mode, you can record LTE strength along a walkthrough, using the non-GPS modes of location which we take from your phone, with a map overlay.</string>
-    <string name="record_floor_plan">Record floor plan</string>
     <string name="record_gps_tutorial">Record route (GPS)</string>
+<!--    Mode 2-->
+    <string name="no_gps_tutorial">In non-GPS recording mode, you can record LTE strength along a walkthrough, using the non-GPS modes of location which we take from your phone, with a map overlay. Long press on a location on the map to correct your location at any time.</string>
     <string name="record_no_gps_tutorial">Record route (no GPS)</string>
+<!--    Mode 3-->
+    <string name="floor_plan_tutorial">In floor plan mode, you can record LTE strength on a walkthrough across multiple floors. You will be prompted to confirm your location, then lay floor plan images down at your location for up to 3 floors. Long press on a location on the map to correct your location at any time.</string>
+    <string name="record_floor_plan">Record floor plan</string>
+
     <string name="got_it">Got it</string>
     <string name="start_recording">Start recording</string>
     <string name="pause">Pause</string>

@@ -19,6 +19,8 @@ package gov.nist.oism.asd.ltecoveragetool;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,7 +39,8 @@ import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.getExternalDataFile;
+import static com.mapbox.mapboxsdk.Mapbox.getApplicationContext;
+import static gov.nist.oism.asd.ltecoveragetool.util.GenericFileProvider.getExternalDataFile;
 
 
 public class GradeFragment extends Fragment {
@@ -66,8 +69,13 @@ public class GradeFragment extends Fragment {
         Intent intentShareFile = new Intent(Intent.ACTION_SEND);
 
         intentShareFile.setType(URLConnection.guessContentTypeFromName(file.getName()));
-        intentShareFile.putExtra(Intent.EXTRA_STREAM,
-                Uri.parse("file://"+file.getAbsolutePath()));
+
+        Uri csvUri = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", file);
+
+        intentShareFile.putExtra(Intent.EXTRA_STREAM, csvUri);
+//        intentShareFile.putExtra(Intent.EXTRA_STREAM, Uri.parse("content://"+file.getAbsolutePath()));
+        intentShareFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
 
         //if you need
         //intentShareFile.putExtra(Intent.EXTRA_SUBJECT,"Sharing File Subject);
@@ -92,7 +100,7 @@ public class GradeFragment extends Fragment {
         TextView filenameText = view.findViewById(R.id.fragment_grade_filename_text_ui);
         filenameText.setText(mFilename);
 
-        filenameText.setOnClickListener(view1 -> shareFile(getExternalDataFile(getContext(), mFilename)));
+        filenameText.setOnClickListener(view1 -> shareFile(getExternalDataFile(getApplicationContext(), mFilename)));
 
         double top = 0.0, middle = 0.0, low = 0.0;
         double topProbability = 0.0, middleProbability = 0.0, lowProbability = 0.0, grade = 0.0;

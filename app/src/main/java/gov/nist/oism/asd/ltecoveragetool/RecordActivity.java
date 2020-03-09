@@ -17,14 +17,18 @@
 package gov.nist.oism.asd.ltecoveragetool;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.telephony.CellIdentityLte;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
@@ -50,16 +54,31 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.SettingsClient;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.geometry.LatLngBounds;
+import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
+import com.mapbox.mapboxsdk.location.modes.CameraMode;
+import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.mapboxsdk.snapshotter.MapSnapshotter;
+import com.mapbox.mapboxsdk.style.layers.Layer;
 import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
@@ -69,13 +88,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import gov.nist.oism.asd.ltecoveragetool.maps.FloorPlanActivity;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 import gov.nist.oism.asd.ltecoveragetool.util.PrefManager;
 
@@ -88,12 +110,13 @@ import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.FLOOR_OPTION;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.FLOOR_OPTIONS;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.GPS_OPTION;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_FLOOR_OPTION;
+import static gov.nist.oism.asd.ltecoveragetool.util.GenericFileProvider.getExternalDataFile;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.getHumanReadableOption;
 
 /*
  * Base activity for map-based signal strength recording.
  */
-public abstract class RecordActivity extends AppCompatActivity{
+public abstract class RecordActivity extends AppCompatActivity implements LocationListener, OnMapReadyCallback {
 
     public static final String DATA_READINGS_KEY = "data_readings_key";
     public static final String OFFSET_KEY = "offset_key";
@@ -107,13 +130,14 @@ public abstract class RecordActivity extends AppCompatActivity{
 
     protected MapView mapView;
     protected List<Point> routeCoordinates;
+    protected ImageView cameraView;
+    protected TextView findLocationBanner;
 
     protected MapboxMap mapboxMap;
     protected boolean setInitialPosition;
     public Style mapstyle;
 
     protected LocationManager locationManager;
-    protected LocationListener locationListener;
 
     protected double lastLat = 0;
     protected double lastLng = 0;
@@ -131,19 +155,31 @@ public abstract class RecordActivity extends AppCompatActivity{
     private Timer mTimer;
     private List<DataReading> mDataReadings;
 
-    private PermissionsManager permissionsManager;
     int count = 0;
 
     public JSONObject rawFeature;
+
+    private LocationRequest mLocationRequest;
+
+    protected static final String ID_IMAGE_LAYER = "layer-id-%d";
+
+    protected String getImageLayerId(int layerId) {
+        return String.format(Locale.US, ID_IMAGE_LAYER, layerId);
+    }
+
+    // https://docs.mapbox.com/android/maps/examples/share-a-snapshot/
+    protected MapSnapshotter mapSnapshotter;
+
+    private long UPDATE_INTERVAL = 10 * 1000;  /* 10 secs */
+    private long FASTEST_INTERVAL = 2000; /* 2 sec */
 
     private String provider;
     private PrefManager prefManager;
 
     protected int numFloors = 3;
-    private int currentFloor = -1;
+    private int currentFloor = 0;
 
     protected void setCurrentFloor(int i) {
-        i -= 1;
         currentFloor = Math.max(0, i); // Currently 0 baseline
         final String title = String.format("%s (Floor %s)",
                 getString(R.string.record_floor_plan),
@@ -155,29 +191,131 @@ public abstract class RecordActivity extends AppCompatActivity{
         return currentFloor;
     }
 
+    private boolean hasStartedSnapshotGeneration = false;
+
+    @Override
+    public void onMapReady(@NonNull MapboxMap mapboxMap) {
+        this.mapboxMap = mapboxMap;
+
+        mapboxMap.addOnMapLongClickListener(point -> {
+            makeToast("Corrected location", Toast.LENGTH_SHORT);
+            LteLog.i("location_corrected", point.toString());
+            lastLat = point.getLatitude();
+            lastLng = point.getLongitude();
+            return false;
+        });
+
+        cameraView.setVisibility(View.VISIBLE);
+        cameraView.setOnClickListener(view -> {
+            if (mapView == null) {
+                makeToast("Map initializing...", Toast.LENGTH_SHORT);
+                return;
+            }
+
+            if (!hasStartedSnapshotGeneration) {
+                hasStartedSnapshotGeneration = true;
+                makeToast("Saving snapshot", Toast.LENGTH_LONG);
+                startSnapShot(
+                        mapboxMap.getProjection().getVisibleRegion().latLngBounds,
+                        mapView.getMeasuredHeight(),
+                        mapView.getMeasuredWidth());
+            }
+        });
+    }
+
+    private void startSnapShot(LatLngBounds latLngBounds, int height, int width) {
+        mapboxMap.getStyle(style -> {
+            if (mapSnapshotter == null) {
+                // Initialize snapshotter with map dimensions and given bounds
+
+                LteLog.i("startSnapshot", String.format("%s %s", imageLayer, lineLayer));
+                MapSnapshotter.Options options =
+                        new MapSnapshotter.Options(width, height)
+                                .withRegion(latLngBounds)
+                                .withLogo(true)
+                                .withStyle(style.getUri());
+
+                mapSnapshotter = new MapSnapshotter(getApplicationContext(), options);
+            } else {
+                // Reuse pre-existing MapSnapshotter instance
+                mapSnapshotter.setSize(width, height);
+                mapSnapshotter.setRegion(latLngBounds);
+                mapSnapshotter.setCameraPosition(mapboxMap.getCameraPosition());
+            }
+
+            mapSnapshotter.start(snapshot -> {
+
+                Bitmap bitmapOfMapSnapshotImage = snapshot.getBitmap();
+
+                Uri bmpUri = getLocalBitmapUri(bitmapOfMapSnapshotImage);
+
+                Intent shareIntent = new Intent();
+                shareIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
+                shareIntent.setType("image/png");
+                shareIntent.setAction(Intent.ACTION_SEND);
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(shareIntent, "Share map image"));
+
+                hasStartedSnapshotGeneration = false;
+            });
+        });
+    }
+
+    private Uri getLocalBitmapUri(Bitmap bmp) {
+        Uri bmpUri = null;
+        File file = getExternalDataFile(getApplicationContext(), "map_my_lte" + System.currentTimeMillis() + ".png");
+        FileOutputStream out;
+
+        try {
+            out = new FileOutputStream(file);
+            bmp.compress(Bitmap.CompressFormat.PNG, 90, out);
+            try {
+                out.close();
+            } catch (IOException exception) {
+                exception.printStackTrace();
+            }
+            bmpUri = FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", file);
+        } catch (FileNotFoundException exception) {
+            exception.printStackTrace();
+            makeToast("Error creating snapshot file", Toast.LENGTH_SHORT);
+        }
+        return bmpUri;
+    }
 
     protected void showTutorialDialog(Context context, String title, String tutorial, String pref) {
-        if (!prefManager.getBoolPreference(pref)) {
-            AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this)
-                    .setTitle(title)
-                    .setMessage(tutorial)
-                    .setPositiveButton(this.getString(R.string.got_it), (dialog, which) -> {
-                        // show the dialog for floor option every time.
-                        if (!SEEN_FLOOR_OPTION.equals(pref)) {
-                            prefManager.saveBoolPreference(pref, true);
-                        } else {
-                            // Show intro for floor plan activity.
-                            Toast.makeText(context, getString(R.string.start_floor_plan), Toast.LENGTH_LONG).show();
-                        }
-                        dialog.dismiss();
-                    });
+//        if (!prefManager.getBoolPreference(pref)) { // To avoid showing multiple times (currently show every time)
+        AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(tutorial)
+                .setPositiveButton(this.getString(R.string.got_it), (dialog, which) -> {
+                    // show the dialog for floor option every time.
+                    if (SEEN_FLOOR_OPTION.equals(pref)) {
+                        Toast.makeText(context, getString(R.string.start_floor_plan), Toast.LENGTH_LONG).show();
+                    }
+                    dialog.dismiss();
+                });
 
-            if (SEEN_FLOOR_OPTION.equals(pref)) {
-                alertBuilder.setItems(FLOOR_OPTIONS, (dialogInterface, i) -> numFloors = i + 1);
-            }
-            alertBuilder.show();
+        if (SEEN_FLOOR_OPTION.equals(pref)) {
+            alertBuilder.setItems(FLOOR_OPTIONS, (dialogInterface, i) -> numFloors = i + 1);
         }
+        alertBuilder.show();
     }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        Log.i("onStatusChanged", provider + " " + status);
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        Log.d("Location", "disable");
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        Log.d("Location", "enable");
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -189,7 +327,6 @@ public abstract class RecordActivity extends AppCompatActivity{
         setTitle(getHumanReadableOption(mapMode));
 
         setupLocation();
-
 
         try {
             rawFeature = new JSONObject("{\"type\":\"FeatureCollection\",\"features\":[]}");
@@ -205,6 +342,8 @@ public abstract class RecordActivity extends AppCompatActivity{
         mPauseRecordButton = findViewById(R.id.activity_record_pause_resume_button_ui);
         mPauseRecordButton.setText(getString(R.string.start));
 
+        findLocationBanner = findViewById(R.id.findingLocationBanner);
+        cameraView = findViewById(R.id.camera_icon);
         mRecordingImage = findViewById(R.id.activity_record_record_image_ui);
         mRecordingImageLabel = findViewById(R.id.activity_record_record_image_label_ui);
         mRsrpText = findViewById(R.id.activity_record_lte_rsrp_text_ui);
@@ -252,6 +391,8 @@ public abstract class RecordActivity extends AppCompatActivity{
         // Now do the recording. We want to keep recording in the background so start and stop
         // in onCreate and onDestroy.
         ((TelephonyManager) getSystemService(TELEPHONY_SERVICE)).listen(mSignalStrengthListener, SignalStrengthListener.LISTEN_SIGNAL_STRENGTHS);
+
+        startLocationUpdates();
         setResumeRecordingState();
 
         mTimer = new Timer();
@@ -352,9 +493,13 @@ public abstract class RecordActivity extends AppCompatActivity{
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_FINE_LOCATION:
-                Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show();
+                makeToast("Permission Granted", Toast.LENGTH_SHORT);
                 break;
         }
+    }
+
+    protected void makeToast(String message, int duration) {
+        Toast.makeText(this, message, duration).show();
     }
 
     private void setupLocation() {
@@ -478,6 +623,55 @@ public abstract class RecordActivity extends AppCompatActivity{
         mRecordingImage.startAnimation(mRecordingImageAnimation);
     }
 
+
+    // Trigger new location updates at interval
+    protected void startLocationUpdates() {
+
+        // Create the location request to start receiving updates
+        mLocationRequest = new LocationRequest();
+        if (GPS_OPTION.equals(mapMode)) {
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        } else {
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_LOW_POWER);
+        }
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
+
+        // Create LocationSettingsRequest object using location request
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        LocationSettingsRequest locationSettingsRequest = builder.build();
+
+        // Check whether location settings are satisfied
+        // https://developers.google.com/android/reference/com/google/android/gms/location/SettingsClient
+        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
+        settingsClient.checkLocationSettings(locationSettingsRequest);
+
+        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
+        getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, new LocationCallback() {
+                    @Override
+                    public void onLocationResult(LocationResult locationResult) {
+                        // do work here
+                        Location lastLocation = locationResult.getLastLocation();
+                        onLocationChanged(lastLocation);
+                    }
+                },
+                Looper.myLooper());
+        LteLog.i("location", "started location updates");
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        if (View.VISIBLE == findLocationBanner.getVisibility()) {
+            findLocationBanner.setVisibility(View.GONE);
+        }
+        lastLat = location.getLatitude();
+        lastLng = location.getLongitude();
+        LteLog.d("update loc", String.format(Locale.US, "%f, %f", lastLat, lastLng));
+        //this.mapboxMap.getLocationComponent().forceLocationUpdate(location);
+    }
+
+
     private Location getLastBestLocation() {
         /*
         List<String> providers = locationManager.getProviders(true);
@@ -498,21 +692,69 @@ public abstract class RecordActivity extends AppCompatActivity{
             }
         }
         return bestLocation;*/
-        if(lastLat != 0 && lastLng != 0)
-        {
+        if (lastLat != 0 && lastLng != 0) {
             Location location = new Location("");
             location.setLatitude(lastLat);
             location.setLongitude(lastLng);
             return location;
-        }
-        else return null;
+        } else return null;
     }
+
     public void getLastLocation() {
         // Get last known recent location using new Google Play Services SDK (v11+)
         FusedLocationProviderClient locationClient = getFusedLocationProviderClient(this);
 
     }
 
+
+    /**
+     * Initialize the Maps SDK's LocationComponent
+     */
+    @SuppressWarnings({"MissingPermission"})
+    protected void enableLocationComponent(@NonNull Style loadedMapStyle) {
+        // Check if permissions are enabled and if not request
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+
+            // Get an instance of the component
+            LocationComponent locationComponent = mapboxMap.getLocationComponent();
+
+            // Set the LocationComponent activation options
+            LocationComponentActivationOptions locationComponentActivationOptions =
+                    LocationComponentActivationOptions.builder(this, loadedMapStyle)
+                            .useDefaultLocationEngine(false)
+                            .build();
+
+            // Activate with the LocationComponentActivationOptions object
+            locationComponent.activateLocationComponent(locationComponentActivationOptions);
+
+            // Enable to make component visible
+            locationComponent.setLocationComponentEnabled(true);
+
+            // Set the component's camera mode
+            locationComponent.setCameraMode(CameraMode.TRACKING);
+
+            // Set the component's render mode
+            locationComponent.setRenderMode(RenderMode.COMPASS);
+
+            initLocationEngine();
+        }
+    }
+
+    /**
+     * Set up the LocationEngine and the parameters for querying the device's location
+     */
+    @SuppressLint("MissingPermission")
+    private void initLocationEngine() {
+        /*
+        locationEngine = LocationEngineProvider.getBestLocationEngine(this);
+
+        LocationEngineRequest request = new LocationEngineRequest.Builder(DEFAULT_INTERVAL_IN_MILLISECONDS)
+                .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY)
+                .setMaxWaitTime(DEFAULT_MAX_WAIT_TIME).build();
+
+        locationEngine.requestLocationUpdates(request, callback, getMainLooper());
+        locationEngine.getLastLocation(callback);*/
+    }
 
     private class SignalStrengthListener extends PhoneStateListener {
 
@@ -598,63 +840,59 @@ public abstract class RecordActivity extends AppCompatActivity{
                             }
                         }
                         final String finalGrade = grade;
-                        if (!mapMode.equals(FLOOR_OPTION)) {
-                            // TODO: allow multiple style overlays for floor.
-                            mapboxMap.setStyle(Style.OUTDOORS,
-                                    style -> {
-                                        // Retrieve GeoJSON from local file and add it to the map
+                        mapboxMap.setStyle(FLOOR_OPTION.equals(mapMode) ? Style.MAPBOX_STREETS : Style.OUTDOORS,
+                                style -> {
+                                    // Retrieve GeoJSON from local file and add it to the map
 
-                                        JSONObject tmp1 = new JSONObject();
-                                        try {
-                                            tmp1.put("type", "Feature");
-                                            JSONObject color = new JSONObject();
-                                            color.put("color", finalGrade);
-                                            tmp1.put("properties", color);
+                                    JSONObject tmp1 = new JSONObject();
+                                    try {
+                                        tmp1.put("type", "Feature");
+                                        JSONObject color = new JSONObject();
+                                        color.put("color", finalGrade);
+                                        tmp1.put("properties", color);
 
-                                            JSONObject geometry = new JSONObject();
-                                            JSONArray coordinates = new JSONArray();
+                                        JSONObject geometry = new JSONObject();
+                                        JSONArray coordinates = new JSONArray();
 
-                                            for (int i = 0; i < routeCoordinates.size(); i++) {
-                                                JSONArray coordinate = new JSONArray();
-                                                coordinate.put(routeCoordinates.get(i).longitude());
-                                                coordinate.put(routeCoordinates.get(i).latitude());
-                                                coordinates.put(coordinate);
-                                            }
-
-                                            geometry.put("type", "LineString");
-                                            geometry.put("coordinates", coordinates);
-                                            tmp1.put("geometry", geometry);
-
-                                            rawFeature.getJSONArray("features").put(tmp1);
-
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
+                                        for (int i = 0; i < routeCoordinates.size(); i++) {
+                                            JSONArray coordinate = new JSONArray();
+                                            coordinate.put(routeCoordinates.get(i).longitude());
+                                            coordinate.put(routeCoordinates.get(i).latitude());
+                                            coordinates.put(coordinate);
                                         }
 
+                                        geometry.put("type", "LineString");
+                                        geometry.put("coordinates", coordinates);
+                                        tmp1.put("geometry", geometry);
 
-                                        style.addSource(new GeoJsonSource("lines", rawFeature.toString()));
-                                        style.addLayer(new LineLayer("finalLines", "lines").withProperties(
-                                                PropertyFactory.lineColor(
-                                                        match(
-                                                                get("color"), rgb(0, 0, 0),
-                                                                stop("top", rgb(0, 255, 0)),
-                                                                stop("middle", rgb(255, 255, 0)),
-                                                                stop("middlelow", rgb(255, 165, 0)),
-                                                                stop("low", rgb(255, 0, 0))
-                                                        )),
-                                                PropertyFactory.visibility(Property.VISIBLE),
-                                                PropertyFactory.lineWidth(3f)
-                                        ));
-                                        routeCoordinates.remove(0);
-                                    });
-                        }
+                                        rawFeature.getJSONArray("features").put(tmp1);
+
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+
+
+                                    style.addSource(new GeoJsonSource("lines", rawFeature.toString()));
+                                    style.addLayer(new LineLayer("finalLines", "lines").withProperties(
+                                            PropertyFactory.lineColor(
+                                                    match(
+                                                            get("color"), rgb(0, 0, 0),
+                                                            stop("top", rgb(0, 255, 0)),
+                                                            stop("middle", rgb(255, 255, 0)),
+                                                            stop("middlelow", rgb(255, 165, 0)),
+                                                            stop("low", rgb(255, 0, 0))
+                                                    )),
+                                            PropertyFactory.visibility(Property.VISIBLE),
+                                            PropertyFactory.lineWidth(3f)
+                                    ));
+                                    routeCoordinates.remove(0);
+
+                                    enableLocationComponent(style);
+                                });
                     }
-
-                    //mapboxMap.setStyle();
                 }
-
             }
-//            }
+
             super.onSignalStrengthsChanged(signalStrength);
         }
     }
@@ -666,7 +904,7 @@ public abstract class RecordActivity extends AppCompatActivity{
     private void setCameraPosition(LatLng location) {
         CameraPosition position = new CameraPosition.Builder()
                 .target(location) // Sets the new camera position
-                .zoom(13) // https://docs.mapbox.com/help/glossary/zoom-level/
+                .zoom(14) // https://docs.mapbox.com/help/glossary/zoom-level/
                 .bearing(0) // Rotate the camera
                 .tilt(0) // Set the camera tilt
                 .build();

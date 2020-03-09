@@ -31,9 +31,4 @@ public class MapMode {
 
     public static final String[] FLOOR_OPTIONS = {"One Floor", "Two Floors", "Three Floors"};
 
-
-    public static File getExternalDataFile(Context context, String fileName) {
-        return new File(context.getExternalFilesDir(null), fileName + ".csv");
-    }
-
 }

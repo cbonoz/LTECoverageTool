@@ -17,7 +17,9 @@
 package gov.nist.oism.asd.ltecoveragetool;
 
 import java.io.Serializable;
+import java.text.DateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 class DataReading implements Serializable {
 
@@ -128,5 +130,18 @@ class DataReading implements Serializable {
 
     public void setFloor(int floor) {
         this.floor = floor;
+    }
+
+    public String getCsvString() {
+        return String.format(Locale.US, "\"%s\",\"%d\",\"%d\",\"%f\",\"%f\",\"%f\",\"%f\",\"%s\",\"%s\"%n",
+                DateFormat.getDateTimeInstance().format(getTimestamp()),
+                getRsrp(),
+                getRsrq(),
+                getLat(),
+                getLng(),
+                getElevation(),
+                getAcc(),
+                getPci() == -1 ? "N/A" : getPci() + "",
+                getFloor() == -1 ? "N/A" : getFloor() + "");
     }
 }

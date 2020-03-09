@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.location.LocationListener;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.SparseArray;
@@ -20,11 +21,11 @@ import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.geometry.LatLngQuad;
-import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
 import com.mapbox.mapboxsdk.style.layers.CircleLayer;
+import com.mapbox.mapboxsdk.style.layers.Layer;
 import com.mapbox.mapboxsdk.style.layers.RasterLayer;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 import com.mapbox.mapboxsdk.style.sources.ImageSource;
@@ -32,17 +33,18 @@ import com.mapbox.mapboxsdk.style.sources.ImageSource;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import gov.nist.oism.asd.ltecoveragetool.NewRecordingActivity;
 import gov.nist.oism.asd.ltecoveragetool.R;
 import gov.nist.oism.asd.ltecoveragetool.RecordActivity;
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 
+import static com.mapbox.mapboxsdk.style.layers.Property.NONE;
+import static com.mapbox.mapboxsdk.style.layers.Property.VISIBLE;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleRadius;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.visibility;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_FLOOR_OPTION;
 
 /**
@@ -51,16 +53,14 @@ import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_FLOOR_OPTION;
  * Used for mode 3.
  */
 public class FloorPlanActivity extends RecordActivity implements
-        OnMapReadyCallback, MapboxMap.OnMapClickListener {
-
+        OnMapReadyCallback, MapboxMap.OnMapClickListener, LocationListener {
 
     private View levelButtons;
 
     private static final String ID_IMAGE_SOURCE = "source-id";
     private static final String CIRCLE_SOURCE_ID = "circle-source-id";
-    private static final String ID_IMAGE_LAYER = "layer-id";
+
     private static int PHOTO_PICK_CODE = 4;
-    private MapView mapView;
     private LatLngQuad quad;
     private List<Feature> boundsFeatureList;
     private List<Point> boundsCirclePointList;
@@ -81,12 +81,10 @@ public class FloorPlanActivity extends RecordActivity implements
         mapView.getMapAsync(this);
     }
 
-
     @Override
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
+        super.onMapReady(mapboxMap);
         levelButtons = findViewById(R.id.floor_button_layout);
-        this.mapboxMap = mapboxMap;
-
 
         this.mapboxMap.setStyle(Style.MAPBOX_STREETS, style -> {
             boundsFeatureList = new ArrayList<>();
@@ -95,7 +93,7 @@ public class FloorPlanActivity extends RecordActivity implements
             imageCountIndex = 0;
             initCircleSource(style);
             initCircleLayer(style);
-
+            enableLocationComponent(style);
         });
 
         initButtons();
@@ -106,41 +104,33 @@ public class FloorPlanActivity extends RecordActivity implements
         for (int i = 0; i < numFloors; i++) {
             Button button = findViewById(buttons[i]);
             button.setVisibility(View.VISIBLE); // show button.
-            final int floor = i + 1;
+            final int floor = i;
             button.setOnClickListener(view -> {
-                Toast.makeText(getApplicationContext(), "Floor " + button.getText(), Toast.LENGTH_SHORT).show();
+                makeToast("Floor " + button.getText(), Toast.LENGTH_SHORT);
                 renderFloorImages(getCurrentFloor(), floor);
                 setCurrentFloor(floor);
             });
         }
 
-        setCurrentFloor(1);
+        setCurrentFloor(0);
     }
 
     private void renderFloorImages(int oldFloor, int newFloor) {
-        List<SourceLayer> oldSourceLayers = floorImageMap.get(oldFloor, new ArrayList<>());
-        for (SourceLayer layer : oldSourceLayers) {
-            mapboxMap.getStyle(style -> {
-                try {
-                    style.removeLayer(layer.getRasterLayer());
-                    style.removeSource(layer.getImageSource());
-                } catch (Exception e) {
-                    LteLog.e("render", "error removing layer" ,e);
-                }
-            });
+        if (oldFloor == newFloor) {
+            return;
         }
 
-        List<SourceLayer> newSourceLayers = floorImageMap.get(newFloor, new ArrayList<>());
-        for (SourceLayer layer : newSourceLayers) {
-            mapboxMap.getStyle(style -> {
-                try {
-                style.addLayer(layer.getRasterLayer());
-                style.addSource(layer.getImageSource());
-                } catch (Exception e) {
-                    LteLog.e("render", "error adding layer" ,e);
-                }
-            });
-        }
+        mapboxMap.getStyle(style -> {
+            Layer oldLayer = style.getLayer(getImageLayerId(oldFloor));
+            if (oldLayer != null) {
+                oldLayer.setProperties(visibility(NONE));
+            }
+            Layer newLayer = style.getLayer(getImageLayerId(newFloor));
+            LteLog.i("render_images",  String.format("%s,%s,%s,%s", oldFloor , newFloor , oldLayer , newLayer));
+            if (newLayer != null) {
+                newLayer.setProperties(visibility(VISIBLE));
+            }
+        });
 
     }
 
@@ -239,14 +229,14 @@ public class FloorPlanActivity extends RecordActivity implements
                             style.addSource(source);
 
                             // Create a raster layer and use the imageSource's ID as the layer's data// Add the layer to the map
-                            RasterLayer layer = new RasterLayer(ID_IMAGE_LAYER + imageCountIndex,
-                                    ID_IMAGE_SOURCE + imageCountIndex);
+                            RasterLayer layer = new RasterLayer(getImageLayerId(getCurrentFloor()), ID_IMAGE_SOURCE + imageCountIndex);
+                            layer.setSourceLayer(getImageLayerId(getCurrentFloor()));
                             style.addLayer(layer);
 
                             // Append the source layer to this floor.
-                            List<SourceLayer> sourceLayers = floorImageMap.get(getCurrentFloor(), new ArrayList<>());
-                            sourceLayers.add(new SourceLayer(source, layer));
-                            floorImageMap.put(getCurrentFloor(), sourceLayers);
+//                            List<SourceLayer> sourceLayers = floorImageMap.get(getCurrentFloor(), new ArrayList<>());
+//                            sourceLayers.add(new SourceLayer(source, layer));
+//                            floorImageMap.put(getCurrentFloor(), sourceLayers);
 
                             // Reset lists in preparation for adding more images
                             boundsFeatureList = new ArrayList<>();

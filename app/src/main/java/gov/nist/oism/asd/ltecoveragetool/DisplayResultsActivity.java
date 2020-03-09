@@ -18,12 +18,15 @@ package gov.nist.oism.asd.ltecoveragetool;
 
 import android.os.Bundle;
 import android.os.Handler;
+
 import com.google.android.material.tabs.TabLayout;
+
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.widget.Toast;
 
 import java.io.File;
@@ -32,14 +35,13 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 import gov.nist.oism.asd.ltecoveragetool.util.LteLog;
 
-import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.getExternalDataFile;
+import static gov.nist.oism.asd.ltecoveragetool.util.GenericFileProvider.getExternalDataFile;
+import static gov.nist.oism.asd.ltecoveragetool.util.GenericFileProvider.createNewRecordCsvFileName;
 
 public class DisplayResultsActivity extends AppCompatActivity {
 
@@ -54,8 +56,7 @@ public class DisplayResultsActivity extends AppCompatActivity {
         mDataReadings = (ArrayList<DataReading>) getIntent().getSerializableExtra(RecordActivity.DATA_READINGS_KEY);
         mOffset = getIntent().getDoubleExtra(RecordActivity.OFFSET_KEY, 0.0);
 
-        mCsvFilename = DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime());
-        mCsvFilename = mCsvFilename.replace(' ', '_').replace(",", "");
+        mCsvFilename = createNewRecordCsvFileName();
 
         ViewPager viewPager = findViewById(R.id.activity_display_results_view_pager_ui);
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
@@ -78,25 +79,21 @@ public class DisplayResultsActivity extends AppCompatActivity {
                 writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
                 writer.write("\"Time\",\"RSRP\",\"RSRQ\",\"LAT\",\"LNG\",\"ELE\",\"ACC\",\"PCI\",\"OFFSET=" + mOffset + "\"\n");
                 for (DataReading dataReading : mDataReadings) {
-
-                    String timestamp = DateFormat.getDateTimeInstance().format(dataReading.getTimestamp());
-                    writer.write(String.format("\"%s\",\"%d\",\"%d\",\"%f\",\"%f\",\"%f\",\"%f\",\"%s\"%n", timestamp, dataReading.getRsrp(), dataReading.getRsrq(),dataReading.getLat(),dataReading.getLng(),dataReading.getElevation(),dataReading.getAcc(), dataReading.getPci() == -1 ? "N/A" : dataReading.getPci() + ""));
+                    writer.write(dataReading.getCsvString());
                 }
                 //Log.e("path", file.getAbsolutePath());
                 Toast.makeText(DisplayResultsActivity.this, "CSV file written", Toast.LENGTH_SHORT).show();
 
-            }
-            catch (IOException caught) {
+            } catch (IOException caught) {
                 LteLog.e("CSV Writer", caught.getMessage(), caught);
                 Toast.makeText(DisplayResultsActivity.this, "Error writing CSV file", Toast.LENGTH_SHORT).show();
-            }
-            finally {
+            } finally {
                 if (writer != null) {
                     try {
                         writer.flush();
                         writer.close();
+                    } catch (IOException ignore) {
                     }
-                    catch (IOException ignore) {}
                 }
             }
         }, 0);

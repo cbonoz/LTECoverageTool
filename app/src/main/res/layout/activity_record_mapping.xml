@@ -13,10 +13,40 @@
         android:layout_weight="1">
 
 
-        <com.mapbox.mapboxsdk.maps.MapView
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+            <com.mapbox.mapboxsdk.maps.MapView
             android:id="@+id/mapView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
+            <TextView
+                android:id="@+id/findingLocationBanner"
+                android:layout_gravity="top"
+                android:text="Finding location..."
+                android:textColor="@color/white"
+                android:layout_width="wrap_content"
+                android:background="@drawable/stop_button_background"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_height="wrap_content"/>
+
+
+            <ImageView
+                android:visibility="gone"
+                android:id="@+id/camera_icon"
+                android:layout_gravity="right"
+                android:scaleX="1.5"
+                android:scaleY="1.5"
+                android:layout_margin="20dp"
+                android:src="@drawable/ic_camera"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+        </FrameLayout>
 
         <LinearLayout
             android:id="@+id/floor_button_layout"
