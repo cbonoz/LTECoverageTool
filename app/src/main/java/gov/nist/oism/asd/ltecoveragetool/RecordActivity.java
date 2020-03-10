@@ -63,6 +63,9 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.SettingsClient;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
@@ -92,6 +95,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
@@ -154,7 +158,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     private double mOffset;
     private Timer mTimer;
     private List<DataReading> mDataReadings;
-
+    CollectionReference LTECollections;
     int count = 0;
 
     public JSONObject rawFeature;
@@ -178,6 +182,13 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
 
     protected int numFloors = 3;
     private int currentFloor = 0;
+
+    FirebaseFirestore mFirestore;
+
+    private void initFirestore() {
+        mFirestore = FirebaseFirestore.getInstance();
+        LTECollections = mFirestore.collection("LTECoordinates/" + Calendar.getInstance().getTime().toString() + "/LTE");
+    }
 
     protected void setCurrentFloor(int i) {
         currentFloor = Math.max(0, i); // Currently 0 baseline
@@ -320,6 +331,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initFirestore();
         initRouteCoordinates();
 
         prefManager = new PrefManager(this);
@@ -460,7 +472,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                 dataReadingCopy.setFloor(currentFloor);
 
                 if (isRecording()) {
-                    mDataReadings.add(new DataReading(dataReadingCopy));
+                    mDataReadings.add(dataReadingCopy);
                 }
 
                 // To be used on the UI thread.
@@ -589,6 +601,10 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     }
 
     public void stopButtonClicked(View view) {
+        for(int i = 0; i < mDataReadings.size(); i++)
+        {
+            LTECollections.add(mDataReadings.get(i));
+        }
         Intent intent = new Intent(this, DisplayResultsActivity.class);
         intent.putExtra(DATA_READINGS_KEY, (ArrayList<DataReading>) mDataReadings);
         intent.putExtra(OFFSET_KEY, mOffset);

@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-
+apply plugin: 'com.google.gms.google-services'
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -8,6 +8,7 @@ android {
         targetSdkVersion 28
         versionCode 8
         versionName "1.2.0"
+        multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -30,7 +31,7 @@ dependencies {
     implementation 'com.github.ViksaaSkool:AwesomeSplash:v1.0.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
     implementation 'com.yayandroid:LocationManager:2.2.0'
-
+    implementation 'com.google.firebase:firebase-firestore:21.4.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.legacy:legacy-support-v13:1.0.0'
     implementation 'com.github.PhilJay:MPAndroidChart:v2.2.3'

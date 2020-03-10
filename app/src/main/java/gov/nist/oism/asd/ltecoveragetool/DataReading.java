@@ -76,19 +76,19 @@ class DataReading implements Serializable {
         this.rsrp = rsrp;
     }
 
-    int getRsrq() {
+    public int getRsrq() {
         return rsrq;
     }
 
-    void setRsrq(int rsrq) {
+    public void setRsrq(int rsrq) {
         this.rsrq = rsrq;
     }
 
-    int getPci() {
+    public int getPci() {
         return pci;
     }
 
-    void setPci(int pci) {
+    public void setPci(int pci) {
         this.pci = pci;
     }
 
@@ -96,7 +96,7 @@ class DataReading implements Serializable {
         this.lat = lastLat;
     }
 
-    double getLat() {
+    public double getLat() {
         return lat;
     }
 
@@ -104,7 +104,7 @@ class DataReading implements Serializable {
         this.lng = lastLng;
     }
 
-    double getLng() {
+    public double getLng() {
         return lng;
     }
 
@@ -112,7 +112,7 @@ class DataReading implements Serializable {
         this.acc = lastAcc;
     }
 
-    double getAcc() {
+    public double getAcc() {
         return acc;
     }
 
@@ -120,7 +120,7 @@ class DataReading implements Serializable {
         this.elevation = elevation;
     }
 
-    double getElevation() {
+    public double getElevation() {
         return elevation;
     }
 
