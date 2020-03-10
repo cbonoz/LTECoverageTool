@@ -44,6 +44,10 @@ import static com.mapbox.mapboxsdk.style.layers.Property.NONE;
 import static com.mapbox.mapboxsdk.style.layers.Property.VISIBLE;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleColor;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.circleRadius;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconAllowOverlap;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconIgnorePlacement;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.textAllowOverlap;
+import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.textIgnorePlacement;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.visibility;
 import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.SEEN_FLOOR_OPTION;
 
@@ -200,7 +204,14 @@ public class FloorPlanActivity extends RecordActivity implements
     private void initCircleLayer(@NonNull Style loadedMapStyle) {
         loadedMapStyle.addLayer(new CircleLayer("circle-layer-bounds-corner-id",
                 CIRCLE_SOURCE_ID).withProperties(
+                // for icon
+                iconIgnorePlacement(true),
+                iconAllowOverlap(true),
+                // for text
+                textIgnorePlacement(true),
+                textAllowOverlap(true),
                 circleRadius(8f),
+                visibility(VISIBLE),
                 circleColor(Color.parseColor("#d004d3"))
         ));
     }
@@ -255,8 +266,12 @@ public class FloorPlanActivity extends RecordActivity implements
                             if (circleSource != null) {
                                 circleSource.setGeoJson(FeatureCollection.fromFeatures(boundsFeatureList));
                             }
+
+                            if (imageStream != null) {
+                                imageStream.close();
+                            }
                         }
-                    } catch (FileNotFoundException exception) {
+                    } catch (Exception exception) {
                         exception.printStackTrace();
                     }
                 });
@@ -270,6 +285,9 @@ public class FloorPlanActivity extends RecordActivity implements
     public void onResume() {
         super.onResume();
         mapView.onResume();
+        if (mapboxMap != null) {
+            mapboxMap.addOnMapClickListener(this);
+        }
     }
 
     @Override
