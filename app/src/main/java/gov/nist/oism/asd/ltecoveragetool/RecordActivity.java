@@ -115,7 +115,8 @@ import static gov.nist.oism.asd.ltecoveragetool.maps.MapMode.getHumanReadableOpt
 /*
  * Base activity for map-based signal strength recording.
  */
-public abstract class RecordActivity extends AppCompatActivity implements LocationListener, OnMapReadyCallback {
+public abstract class RecordActivity extends AppCompatActivity implements LocationListener,
+        OnMapReadyCallback {
 
     public static final String DATA_READINGS_KEY = "data_readings_key";
     public static final String OFFSET_KEY = "offset_key";
@@ -195,14 +196,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     @Override
     public void onMapReady(@NonNull MapboxMap mapboxMap) {
         this.mapboxMap = mapboxMap;
-
-        mapboxMap.addOnMapLongClickListener(point -> {
-            makeToast("Corrected location", Toast.LENGTH_SHORT);
-            LteLog.i("location_corrected", point.toString());
-            lastLat = point.getLatitude();
-            lastLng = point.getLongitude();
-            return false;
-        });
+        LteLog.i("map_ready", mapboxMap.toString());
 
         cameraView.setVisibility(View.VISIBLE);
         cameraView.setOnClickListener(view -> {
@@ -219,6 +213,14 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                         mapView.getMeasuredHeight(),
                         mapView.getMeasuredWidth());
             }
+        });
+
+        this.mapboxMap.addOnMapLongClickListener(point -> {
+            makeToast("Corrected location", Toast.LENGTH_SHORT);
+            LteLog.i("location_corrected", point.toString());
+            lastLat = point.getLatitude();
+            lastLng = point.getLongitude();
+            return false;
         });
     }
 
@@ -245,21 +247,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                 hasStartedSnapshotGeneration = false;
             });
 
-            /*
-            mapSnapshotter.start(snapshot -> {
-//                Bitmap bitmapOfMapSnapshotImage = snapshot.getBitmap();
-                Bitmap bitmapOfMapSnapshotImage = takeScreenshot();
-                if (bitmapOfMapSnapshotImage == null) {
-                    makeToast("Unable to take screenshot", Toast.LENGTH_SHORT);
-                    hasStartedSnapshotGeneration = false;
-                    return;
-                }
 
-                shareBitmap(bitmapOfMapSnapshotImage);
-
-                hasStartedSnapshotGeneration = false;
-            });
-            */
         });
     }
 
@@ -271,22 +259,6 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
         shareIntent.setAction(Intent.ACTION_SEND);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         startActivity(Intent.createChooser(shareIntent, "Share map image"));
-    }
-
-    private Bitmap takeScreenshot() {
-
-        try {
-           // create bitmap screen capture
-            View v1 = getWindow().getDecorView().getRootView();
-            v1.setDrawingCacheEnabled(true);
-            Bitmap bitmap = Bitmap.createBitmap(v1.getDrawingCache());
-            v1.setDrawingCacheEnabled(false);
-            return bitmap;
-       } catch (Throwable e) {
-            // Several error may come out with file handling or DOM
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private Uri getLocalBitmapUri(Bitmap bmp) {
@@ -578,6 +550,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     @Override
     protected void onPause() {
         super.onPause();
+        LteLog.i("record", "on pause");
     }
 
     @Override
