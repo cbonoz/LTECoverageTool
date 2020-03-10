@@ -77,7 +77,7 @@ public class DisplayResultsActivity extends AppCompatActivity {
             try {
                 File file = getExternalDataFile(this, mCsvFilename);
                 writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
-                writer.write("\"Time\",\"RSRP\",\"RSRQ\",\"LAT\",\"LNG\",\"ELE\",\"ACC\",\"PCI\",\"OFFSET=" + mOffset + "\",\"FLOOR\"\n");
+                writer.write("\"Time\",\"RSRP\",\"RSRQ\",\"LAT\",\"LNG\",\"ELE\",\"ACC\",\"PCI\",\"FLOOR\",\"OFFSET=\"" + mOffset + "\"\n");
                 for (DataReading dataReading : mDataReadings) {
                     writer.write(dataReading.getCsvString());
                 }

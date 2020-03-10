@@ -63,6 +63,7 @@ public class FloorPlanActivity extends RecordActivity implements
 
     private static final String ID_IMAGE_SOURCE = "source-id";
     private static final String CIRCLE_SOURCE_ID = "circle-source-id";
+    private static final String CIRCLE_LAYER_ID = "circle-layer-bounds-corner-id";
 
     private static int PHOTO_PICK_CODE = 4;
     private LatLngQuad quad;
@@ -89,6 +90,7 @@ public class FloorPlanActivity extends RecordActivity implements
     public void onMapReady(@NonNull final MapboxMap mapboxMap) {
         super.onMapReady(mapboxMap);
         levelButtons = findViewById(R.id.floor_button_layout);
+        LteLog.i("floor_plan", "map ready");
 
         this.mapboxMap.setStyle(Style.MAPBOX_STREETS, style -> {
             boundsFeatureList = new ArrayList<>();
@@ -158,13 +160,7 @@ public class FloorPlanActivity extends RecordActivity implements
         // Add the click point to the CircleLayer and update the display of the CircleLayer data
         boundsCirclePointList.add(Point.fromLngLat(point.getLongitude(), point.getLatitude()));
 
-        Style style = mapboxMap.getStyle();
-        if (style != null) {
-            GeoJsonSource circleSource = style.getSourceAs(CIRCLE_SOURCE_ID);
-            if (circleSource != null) {
-                circleSource.setGeoJson(FeatureCollection.fromFeatures(boundsFeatureList));
-            }
-        }
+        updateCircleSource();
 
         // Once the 4 LatLngQuad points have been set for where the image will placed...
         if (boundsCirclePointList.size() == 4) {
@@ -189,20 +185,36 @@ public class FloorPlanActivity extends RecordActivity implements
         return true;
     }
 
+    private void updateCircleSource() {
+        final Style style = mapboxMap.getStyle();
+        if (style != null) {
+            GeoJsonSource circleSource = style.getSourceAs(CIRCLE_SOURCE_ID);
+            LteLog.i("floor_plan", "update sources " + circleSource + " " + boundsFeatureList);
+            if (circleSource == null) {
+                initCircleSource(style);
+                Layer layer = style.getLayer(CIRCLE_LAYER_ID);
+                LteLog.i("floor_plan", "circle source was null, layer: " + layer);
+                if (layer == null) {
+                    initCircleLayer(style);
+                }
+                circleSource = style.getSourceAs(CIRCLE_SOURCE_ID);
+            }
+            circleSource.setGeoJson(FeatureCollection.fromFeatures(boundsFeatureList));
+        }
+    }
+
     /**
      * Set up the CircleLayer source for showing LatLngQuad map click points
      */
     private void initCircleSource(@NonNull Style loadedMapStyle) {
-        loadedMapStyle.addSource(
-                new GeoJsonSource(CIRCLE_SOURCE_ID, FeatureCollection.fromFeatures(new Feature[]{}))
-        );
+        loadedMapStyle.addSource(new GeoJsonSource(CIRCLE_SOURCE_ID, FeatureCollection.fromFeatures(new Feature[]{})));
     }
 
     /**
      * Set up the CircleLayer for showing LatLngQuad map click points
      */
     private void initCircleLayer(@NonNull Style loadedMapStyle) {
-        loadedMapStyle.addLayer(new CircleLayer("circle-layer-bounds-corner-id",
+        loadedMapStyle.addLayer(new CircleLayer(CIRCLE_LAYER_ID,
                 CIRCLE_SOURCE_ID).withProperties(
                 // for icon
                 iconIgnorePlacement(true),
@@ -262,9 +274,11 @@ public class FloorPlanActivity extends RecordActivity implements
                             imageCountIndex++;
 
                             // Clear circles from CircleLayer
-                            GeoJsonSource circleSource = style.getSourceAs(CIRCLE_SOURCE_ID);
-                            if (circleSource != null) {
-                                circleSource.setGeoJson(FeatureCollection.fromFeatures(boundsFeatureList));
+                            updateCircleSource();
+
+                            if (imageStream != null) {
+                                LteLog.i("floor_plan", "Closed stream");
+                                imageStream.close();
                             }
 
                             if (imageStream != null) {
@@ -272,6 +286,7 @@ public class FloorPlanActivity extends RecordActivity implements
                             }
                         }
                     } catch (Exception exception) {
+                        LteLog.e("floor_plan", "error adding image", exception);
                         exception.printStackTrace();
                     }
                 });

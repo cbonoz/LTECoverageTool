@@ -41,6 +41,7 @@ import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -67,6 +68,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.mapbox.android.core.permissions.PermissionsManager;
+import com.mapbox.geojson.GeoJson;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -85,6 +87,7 @@ import com.mapbox.mapboxsdk.style.layers.LineLayer;
 import com.mapbox.mapboxsdk.style.layers.Property;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
+import com.mapbox.mapboxsdk.style.sources.Source;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -449,6 +452,8 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                                         }
                                         dataReadingCopy.setPci(pci);
                                     }
+
+                                    dataReadingCopy.setFloor(getCurrentFloor());
                                 }
                             }
                         }
@@ -542,6 +547,12 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     protected void initRouteCoordinates() {
         // Create a list to store our line coordinates.
         routeCoordinates = new ArrayList<>();
+
+        // TODO: Support multiple levels
+        // ex:
+//        for (int i = 0; i < FLOOR_OPTIONS.length; i++) {
+//            routeCoordinates.append(i, new ArrayList<>());
+//        }
 
         // Sample data
 //        routeCoordinates.add(Point.fromLngLat(-118.39439114221236, 33.397676454651766));
@@ -823,14 +834,17 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                     mCurrentReading.setLng(lastLng);
                     mCurrentReading.setAcc(lastAcc);
                     mCurrentReading.setElevation(lastElevation);
+                    mCurrentReading.setFloor(getCurrentFloor());
                 }
 
                 LteLog.i(TAG, String.format(Locale.getDefault(), "rsrp: %d, rsrq: %d", rsrp, rsrq));
 
                 if (mapboxMap != null) {
-                    routeCoordinates.add(Point.fromLngLat(lastLng, lastLat));
+                    final List<Point> points = routeCoordinates;
+                    points.add(Point.fromLngLat(lastLng, lastLat));
+                    LteLog.i("points", points.size() + ", floor " + getCurrentFloor());
                     count++;
-                    if (routeCoordinates.size() >= 2 && rawFeature != null && rawFeature.has("features")) {
+                    if (points.size() >= 2 && rawFeature != null && rawFeature.has("features")) {
                         Log.d("plot", rawFeature.toString());
 
                         String grade = "";
@@ -846,8 +860,8 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                             }
                         }
                         final String finalGrade = grade;
-                        mapboxMap.setStyle(FLOOR_OPTION.equals(mapMode) ? Style.MAPBOX_STREETS : Style.OUTDOORS,
-                                style -> {
+                        mapboxMap.getStyle(style -> {
+                                    LteLog.i("record_activity", "set style");
                                     // Retrieve GeoJSON from local file and add it to the map
 
                                     JSONObject tmp1 = new JSONObject();
@@ -860,10 +874,10 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                                         JSONObject geometry = new JSONObject();
                                         JSONArray coordinates = new JSONArray();
 
-                                        for (int i = 0; i < routeCoordinates.size(); i++) {
+                                        for (int i = 0; i < points.size(); i++) {
                                             JSONArray coordinate = new JSONArray();
-                                            coordinate.put(routeCoordinates.get(i).longitude());
-                                            coordinate.put(routeCoordinates.get(i).latitude());
+                                            coordinate.put(points.get(i).longitude());
+                                            coordinate.put(points.get(i).latitude());
                                             coordinates.put(coordinate);
                                         }
 
@@ -877,21 +891,27 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                                         e.printStackTrace();
                                     }
 
-
-                                    style.addSource(new GeoJsonSource("lines", rawFeature.toString()));
-                                    style.addLayer(new LineLayer("finalLines", "lines").withProperties(
-                                            PropertyFactory.lineColor(
-                                                    match(
-                                                            get("color"), rgb(0, 0, 0),
-                                                            stop("top", rgb(0, 255, 0)),
-                                                            stop("middle", rgb(255, 255, 0)),
-                                                            stop("middlelow", rgb(255, 165, 0)),
-                                                            stop("low", rgb(255, 0, 0))
-                                                    )),
-                                            PropertyFactory.visibility(Property.VISIBLE),
-                                            PropertyFactory.lineWidth(3f)
-                                    ));
-                                    routeCoordinates.remove(0);
+                                    GeoJsonSource lines = style.getSourceAs("lines");
+                                    // TODO: add logic for floor plan to separate by floor.
+                                    if (lines == null) {
+                                        style.addSource(new GeoJsonSource("lines", rawFeature.toString()));
+                                        style.addLayer(new LineLayer("finalLines", "lines").withProperties(
+                                                PropertyFactory.lineColor(
+                                                        match(
+                                                                get("color"), rgb(0, 0, 0),
+                                                                stop("top", rgb(0, 255, 0)),
+                                                                stop("middle", rgb(255, 255, 0)),
+                                                                stop("middlelow", rgb(255, 165, 0)),
+                                                                stop("low", rgb(255, 0, 0))
+                                                        )),
+                                                PropertyFactory.visibility(Property.VISIBLE),
+                                                PropertyFactory.lineWidth(3f)
+                                        ));
+//                                        routeCoordinates.remove(0);
+                                    } else {
+                                        LteLog.i("record_activity", "update lines " + rawFeature.length());
+                                        lines.setGeoJson(rawFeature.toString());
+                                    }
 
                                     enableLocationComponent(style);
                                 });
