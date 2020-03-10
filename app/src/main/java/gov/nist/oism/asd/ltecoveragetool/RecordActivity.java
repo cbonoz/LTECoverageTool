@@ -692,6 +692,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     public void onLocationChanged(Location location) {
         lastLat = location.getLatitude();
         lastLng = location.getLongitude();
+
         LteLog.d("update loc", String.format(Locale.US, "%f, %f", lastLat, lastLng));
         //this.mapboxMap.getLocationComponent().forceLocationUpdate(location);
     }
@@ -721,6 +722,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
             Location location = new Location("");
             location.setLatitude(lastLat);
             location.setLongitude(lastLng);
+            mapboxMap.getLocationComponent().forceLocationUpdate(location);
             return location;
         } else return null;
     }
