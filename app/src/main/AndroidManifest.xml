@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:tools="http://schemas.android.com/tools"
-    package="gov.nist.oism.asd.ltecoveragetool"
+    package="com.lte.mapmylte.mapper.www"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -13,13 +13,13 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher_indoor_lte"
-        android:name=".LteApplication"
+        android:name="com.lte.mapmylte.mapper.www.LteApplication"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <provider
-            android:name=".util.GenericFileProvider"
+            android:name="com.lte.mapmylte.mapper.www.util.GenericFileProvider"
             android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -28,7 +28,7 @@
                 android:resource="@xml/provider_paths"/>
         </provider>
         <activity
-            android:name=".SplashActivity"
+            android:name="com.lte.mapmylte.mapper.www.SplashActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -37,64 +37,64 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ProhibitionNoticeActivity"
-            android:parentActivityName=".DisclaimerActivity"
+            android:name="com.lte.mapmylte.mapper.www.ProhibitionNoticeActivity"
+            android:parentActivityName="com.lte.mapmylte.mapper.www.DisclaimerActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".DisclaimerActivity"/>
+                android:value="com.lte.mapmylte.mapper.www.DisclaimerActivity"/>
         </activity>
         <activity
-            android:name=".AcknowledgementNoticeActivity"
-            android:parentActivityName=".DisclaimerActivity"
+            android:name="com.lte.mapmylte.mapper.www.AcknowledgementNoticeActivity"
+            android:parentActivityName="com.lte.mapmylte.mapper.www.DisclaimerActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".DisclaimerActivity"/>
+                android:value="com.lte.mapmylte.mapper.www.DisclaimerActivity"/>
         </activity>
         <activity
-            android:name=".NewRecordingActivity"
+            android:name="com.lte.mapmylte.mapper.www.NewRecordingActivity"
             android:screenOrientation="portrait">
         </activity>
         <activity
-            android:name=".RecordActivity"
+            android:name="com.lte.mapmylte.mapper.www.RecordActivity"
             android:screenOrientation="portrait">
         </activity>
         <activity
-            android:name=".DisplayResultsActivity"
-            android:parentActivityName=".RecordActivity"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".RecordActivity"/>
-        </activity>
-        <activity
-            android:name=".NistSoftwareActivity"
-            android:parentActivityName=".DisclaimerActivity"
+            android:name="com.lte.mapmylte.mapper.www.DisplayResultsActivity"
+            android:parentActivityName="com.lte.mapmylte.mapper.www.RecordActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".DisclaimerActivity"/>
+                android:value="com.lte.mapmylte.mapper.www.RecordActivity"/>
         </activity>
         <activity
-            android:name=".LiabilityNoticeActivity"
-            android:parentActivityName=".DisclaimerActivity"
+            android:name="com.lte.mapmylte.mapper.www.NistSoftwareActivity"
+            android:parentActivityName="com.lte.mapmylte.mapper.www.DisclaimerActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".DisclaimerActivity"/>
+                android:value="com.lte.mapmylte.mapper.www.DisclaimerActivity"/>
         </activity>
         <activity
-            android:name=".UncertaintyNoticeActivity"
-            android:parentActivityName=".DisclaimerActivity"
+            android:name="com.lte.mapmylte.mapper.www.LiabilityNoticeActivity"
+            android:parentActivityName="com.lte.mapmylte.mapper.www.DisclaimerActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".DisclaimerActivity"/>
+                android:value="com.lte.mapmylte.mapper.www.DisclaimerActivity"/>
         </activity>
-        <activity android:name=".maps.GpsLineLayerActivity" />
-        <activity android:name=".maps.FloorPlanActivity" />
-        <activity android:name=".DisclaimerActivity" />
+        <activity
+            android:name="com.lte.mapmylte.mapper.www.UncertaintyNoticeActivity"
+            android:parentActivityName="com.lte.mapmylte.mapper.www.DisclaimerActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.lte.mapmylte.mapper.www.DisclaimerActivity"/>
+        </activity>
+        <activity android:name="com.lte.mapmylte.mapper.www.maps.GpsLineLayerActivity" />
+        <activity android:name="com.lte.mapmylte.mapper.www.maps.FloorPlanActivity" />
+        <activity android:name="com.lte.mapmylte.mapper.www.DisclaimerActivity" />
     </application>
 
 </manifest>
