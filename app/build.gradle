@@ -3,11 +3,11 @@ apply plugin: 'com.google.gms.google-services'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "gov.nist.oism.asd.ltecoveragetool"
+        applicationId "com.lte.mapmylte.mapper.www"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 8
-        versionName "1.2.0"
+        versionCode 1
+        versionName "1.0.0"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
