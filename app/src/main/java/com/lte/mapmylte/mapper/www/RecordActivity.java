@@ -65,6 +65,7 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.SettingsClient;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.lte.mapmylte.mapper.www.util.SignalGrade;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
@@ -722,11 +723,6 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
         } else return null;
     }
 
-    public void getLastLocation() {
-        // Get last known recent location using new Google Play Services SDK (v11+)
-        FusedLocationProviderClient locationClient = getFusedLocationProviderClient(this);
-
-    }
 
 
     /**
@@ -779,6 +775,9 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     }
 
     private class SignalStrengthListener extends PhoneStateListener {
+
+        private int lastSignalGradeChangedIndex = 0;
+        private SignalGrade lastSignalGrade = SignalGrade.UNKNOWN;
 
         @Override
         public void onSignalStrengthsChanged(SignalStrength signalStrength) {
@@ -842,19 +841,20 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                     if (points.size() >= 2 && rawFeature != null && rawFeature.has("features")) {
                         Log.d("plot", rawFeature.toString());
 
-                        String grade = "";
+                        final SignalGrade grade;
                         if (mDataReadings != null) {
                             if (rsrp >= -95) {
-                                grade = "top";
+                                grade = SignalGrade.TOP;
                             } else if (rsrp >= -103) {
-                                grade = "middlelow";
+                                grade = SignalGrade.MIDDLE_LOW;
                             } else if (rsrp >= -110) {
-                                grade = "middle";
+                                grade = SignalGrade.MIDDLE;
                             } else {
-                                grade = "low";
+                                grade = SignalGrade.LOW;
                             }
+                        } else {
+                            grade = SignalGrade.UNKNOWN;
                         }
-                        final String finalGrade = grade;
                         mapboxMap.getStyle(style -> {
                                     LteLog.i("record_activity", "set style");
                                     // Retrieve GeoJSON from local file and add it to the map
@@ -863,18 +863,24 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                                     try {
                                         tmp1.put("type", "Feature");
                                         JSONObject color = new JSONObject();
-                                        color.put("color", finalGrade);
+                                        color.put("color", grade.getValue());
                                         tmp1.put("properties", color);
 
                                         JSONObject geometry = new JSONObject();
                                         JSONArray coordinates = new JSONArray();
 
-                                        for (int i = 0; i < points.size(); i++) {
+                                        if (lastSignalGrade != grade) {
+                                            lastSignalGradeChangedIndex = points.size() - 1;
+                                        }
+
+                                        for (int i = lastSignalGradeChangedIndex; i < points.size(); i++) {
                                             JSONArray coordinate = new JSONArray();
                                             coordinate.put(points.get(i).longitude());
                                             coordinate.put(points.get(i).latitude());
                                             coordinates.put(coordinate);
                                         }
+
+                                        lastSignalGrade = grade;
 
                                         geometry.put("type", "LineString");
                                         geometry.put("coordinates", coordinates);
@@ -894,10 +900,10 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
                                                 PropertyFactory.lineColor(
                                                         match(
                                                                 get("color"), rgb(0, 0, 0),
-                                                                stop("top", rgb(0, 255, 0)),
-                                                                stop("middle", rgb(255, 255, 0)),
-                                                                stop("middlelow", rgb(255, 165, 0)),
-                                                                stop("low", rgb(255, 0, 0))
+                                                                stop(SignalGrade.TOP.getValue(), rgb(0, 255, 0)),
+                                                                stop(SignalGrade.MIDDLE.getValue(), rgb(255, 255, 0)),
+                                                                stop(SignalGrade.MIDDLE_LOW.getValue(), rgb(255, 165, 0)),
+                                                                stop(SignalGrade.LOW.getValue(), rgb(255, 0, 0))
                                                         )),
                                                 PropertyFactory.visibility(Property.VISIBLE),
                                                 PropertyFactory.lineWidth(3f)
