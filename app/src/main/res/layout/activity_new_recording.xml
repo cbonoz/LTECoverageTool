@@ -12,23 +12,40 @@
 
     <ImageView
         android:id="@+id/activity_new_recording_tower_image_ui"
-        android:layout_width="249dp"
-        android:layout_height="172dp"
+        android:layout_width="match_parent"
+        android:layout_height="224dp"
         android:scaleType="fitCenter"
-        android:src="@drawable/ic_lte_tower" />
-
+        android:src="@drawable/map_my_llte_image_image" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/select_mode"
-        android:layout_marginBottom="50dp"
-        android:textSize="20sp" />
+        android:layout_marginBottom="10dp"
+        android:textSize="20sp"
+        android:textColor="@color/white"/>
+
+    <Button
+        android:id="@+id/gps_map_button"
+        style="@style/FullButton"
+        android:text="Map my route (GPS)" />
+
+    <Button
+        android:id="@+id/no_gps_map_button"
+        style="@style/FullButton"
+        android:layout_marginTop="15dp"
+        android:text="Map my route (no GPS)" />
+
+    <Button
+        android:id="@+id/floor_plan_map_button"
+        style="@style/FullButton"
+        android:layout_marginTop="15dp"
+        android:text="Map my route with floor plan (no GPS)" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="50dp"
+        android:layout_marginTop="25dp"
         android:orientation="horizontal">
 
         <TextView
@@ -50,21 +67,9 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/gps_map_button"
-        style="@style/FullButton"
-        android:text="Map my route (GPS)" />
-
-    <Button
-        android:id="@+id/no_gps_map_button"
-        style="@style/FullButton"
-        android:layout_marginTop="25dp"
-        android:text="Map my route (no GPS)" />
-
-    <Button
-        android:id="@+id/floor_plan_map_button"
-        style="@style/FullButton"
-        android:layout_marginTop="25dp"
-        android:text="Map my route with floor plan (no GPS)" />
-
-
+        android:id="@+id/offset_info_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/what_s_this">
+    </Button>
 </LinearLayout>

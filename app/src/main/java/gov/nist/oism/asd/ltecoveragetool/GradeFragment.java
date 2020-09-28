@@ -25,6 +25,7 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.PieChart;
@@ -97,7 +98,7 @@ public class GradeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_grade, container, false);
-        TextView filenameText = view.findViewById(R.id.fragment_grade_filename_text_ui);
+        Button filenameText = view.findViewById(R.id.fragment_grade_filename_text_ui);
         filenameText.setText(mFilename);
 
         filenameText.setOnClickListener(view1 -> shareFile(getExternalDataFile(getApplicationContext(), mFilename)));

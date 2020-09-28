@@ -7,47 +7,41 @@
     android:padding="10dp"
     tools:context=".GradeFragment">
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:orientation="vertical"
         android:gravity="center"
         android:layout_gravity="center"
         android:layout_height="match_parent">
-
-        <TextView
-            android:id="@+id/fragment_grade_filename_label_ui"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="@string/activity_display_results_filename_label_text"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
-
-        <TextView
+        <Button
             android:id="@+id/fragment_grade_filename_text_ui"
-            android:textColor="#3366BB"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginTop="20dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-            tools:text="fffffffffffffff" />
+            android:paddingVertical="40dp"
+            android:drawableTop="@drawable/baseline_save_alt_white_18dp"
+            android:text="@string/activity_display_results_filename_label_text">
+        </Button>
 
-        <TextView
-            android:id="@+id/fragment_grade_grade_label_ui"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="84dp"
-            android:layout_marginEnd="8dp"
-            android:text="@string/fragment_grade_grade_label_text"
-            android:textAppearance="@style/TextAppearance.AppCompat.Display1"/>
-        <TextView
-            android:id="@+id/fragment_grade_grade_text_ui"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:textAppearance="@style/TextAppearance.AppCompat.Display1"/>
+            android:layout_marginTop="18dp">
+            <TextView
+                android:id="@+id/fragment_grade_grade_label_ui"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/fragment_grade_grade_label_text"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"/>
+
+            <TextView
+                android:id="@+id/fragment_grade_grade_text_ui"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"/>
+        </LinearLayout>
 
         <com.github.mikephil.charting.charts.PieChart
             android:id="@+id/fragment_grade_pie_chart_ui"

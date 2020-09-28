@@ -17,6 +17,8 @@
 package gov.nist.oism.asd.ltecoveragetool;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -57,6 +59,7 @@ public class NewRecordingActivity extends AppCompatActivity {
     private Button gpsButton;
     private Button noGpsButton;
     private Button floorPlanButton;
+    private Button offsetInfoButton;
 
     private String lastOptionSelected;
 
@@ -69,10 +72,12 @@ public class NewRecordingActivity extends AppCompatActivity {
         gpsButton = findViewById(R.id.gps_map_button);
         noGpsButton = findViewById(R.id.no_gps_map_button);
         floorPlanButton = findViewById(R.id.floor_plan_map_button);
+        offsetInfoButton = findViewById(R.id.offset_info_button);
 
         gpsButton.setOnClickListener(view -> newRecordingButtonClicked(GPS_OPTION));
         noGpsButton.setOnClickListener(view -> newRecordingButtonClicked(NO_GPS_OPTION));
         floorPlanButton.setOnClickListener(view -> newRecordingButtonClicked(FLOOR_OPTION));
+        offsetInfoButton.setOnClickListener(view -> offsetInfoButtonClicked());
 
         mOffsetUi = findViewById(R.id.activity_new_recording_offset_ui);
         mOffsetUi.setText(String.format(Locale.getDefault(), "%.1f", 0.0));
@@ -88,6 +93,15 @@ public class NewRecordingActivity extends AppCompatActivity {
         } else {
             startRecordingActivity();
         }
+    }
+
+    public void offsetInfoButtonClicked() {
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle("Offset");
+        alertDialog.setMessage(getString(R.string.offest_info_message));
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                (dialog, which) -> dialog.dismiss());
+        alertDialog.show();
     }
 
     @Override
