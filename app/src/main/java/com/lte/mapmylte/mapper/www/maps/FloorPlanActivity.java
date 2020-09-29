@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.lte.mapmylte.mapper.www.R;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
@@ -35,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.lte.mapmylte.mapper.www.NewRecordingActivity;
-import com.lte.mapmylte.mapper.www.R;
 import com.lte.mapmylte.mapper.www.RecordActivity;
 import com.lte.mapmylte.mapper.www.util.LteLog;
 

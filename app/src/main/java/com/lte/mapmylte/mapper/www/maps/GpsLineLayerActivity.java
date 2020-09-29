@@ -2,11 +2,14 @@ package com.lte.mapmylte.mapper.www.maps;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 
-import android.view.View;
-
+import com.lte.mapmylte.mapper.www.NewRecordingActivity;
+import com.lte.mapmylte.mapper.www.R;
+import com.lte.mapmylte.mapper.www.RecordActivity;
+import com.lte.mapmylte.mapper.www.util.LteLog;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.LineString;
@@ -18,12 +21,6 @@ import com.mapbox.mapboxsdk.style.layers.Property;
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory;
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource;
 
-import com.lte.mapmylte.mapper.www.NewRecordingActivity;
-import com.lte.mapmylte.mapper.www.R;
-import com.lte.mapmylte.mapper.www.RecordActivity;
-import com.lte.mapmylte.mapper.www.util.LteLog;
-
-import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 import static com.lte.mapmylte.mapper.www.maps.MapMode.GPS_OPTION;
 import static com.lte.mapmylte.mapper.www.maps.MapMode.SEEN_GPS_OPTION;
 import static com.lte.mapmylte.mapper.www.maps.MapMode.SEEN_NO_GPS_OPTION;
