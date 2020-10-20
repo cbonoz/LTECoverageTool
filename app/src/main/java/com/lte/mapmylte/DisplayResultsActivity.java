@@ -14,7 +14,7 @@
  * WHETHER OR NOT INJURY WAS SUSTAINED BY PERSONS OR PROPERTY OR OTHERWISE, AND WHETHER OR NOT LOSS WAS SUSTAINED FROM, OR AROSE OUT OF THE RESULTS OF,
  * OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
-package com.lte.mapmylte.mapper.www;
+package com.lte.mapmylte;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -38,10 +38,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.lte.mapmylte.mapper.www.util.LteLog;
+import com.lte.mapmylte.util.LteLog;
 
-import static com.lte.mapmylte.mapper.www.util.GenericFileProvider.getExternalDataFile;
-import static com.lte.mapmylte.mapper.www.util.GenericFileProvider.createNewRecordCsvFileName;
+import static com.lte.mapmylte.util.GenericFileProvider.getExternalDataFile;
+import static com.lte.mapmylte.util.GenericFileProvider.createNewRecordCsvFileName;
 
 public class DisplayResultsActivity extends AppCompatActivity {
 

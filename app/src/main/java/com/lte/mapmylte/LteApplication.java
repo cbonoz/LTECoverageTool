@@ -1,8 +1,8 @@
-package com.lte.mapmylte.mapper.www;
+package com.lte.mapmylte;
 
 import android.app.Application;
 
-import com.lte.mapmylte.mapper.www.R;
+import com.lte.mapmylte.R;
 import com.mapbox.mapboxsdk.Mapbox;
 
 public class LteApplication extends Application {

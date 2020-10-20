@@ -14,53 +14,16 @@
  * WHETHER OR NOT INJURY WAS SUSTAINED BY PERSONS OR PROPERTY OR OTHERWISE, AND WHETHER OR NOT LOSS WAS SUSTAINED FROM, OR AROSE OUT OF THE RESULTS OF,
  * OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
-package com.lte.mapmylte.mapper.www;
+package com.lte.mapmylte;
 
-import android.content.Intent;
-import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
-import android.view.View;
+import android.os.Bundle;
 
-public class DisclaimerActivity extends AppCompatActivity {
+public class AcknowledgementNoticeActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_disclaimer);
-    }
-
-    public void liabilityNoticeActivityButtonClicked(View view) {
-        Intent intent = new Intent(this, LiabilityNoticeActivity.class);
-        startActivity(intent);
-    }
-
-    public void prohibitionNoticeActivityButtonClicked(View view) {
-        Intent intent = new Intent(this, AcknowledgementNoticeActivity.class);
-        startActivity(intent);
-    }
-
-    public void acknowledgementNoticeActivityButtonClicked(View view) {
-        Intent intent = new Intent(this, ProhibitionNoticeActivity.class);
-        startActivity(intent);
-    }
-
-    public void nistSoftwareActivityButtonClicked(View view) {
-        Intent intent = new Intent(this, NistSoftwareActivity.class);
-        startActivity(intent);
-    }
-
-    public void uncertaintyNoticeActivityButtonClicked(View view) {
-        Intent intent = new Intent(this, UncertaintyNoticeActivity.class);
-        startActivity(intent);
-    }
-
-    public void exitButtonClicked(View view) {
-        finish();
-    }
-
-    public void acceptButtonClicked(View view) {
-        Intent intent = new Intent(this, NewRecordingActivity.class);
-        startActivity(intent);
-        finish();
+        setContentView(R.layout.activity_acknowledgement_notice);
     }
 }

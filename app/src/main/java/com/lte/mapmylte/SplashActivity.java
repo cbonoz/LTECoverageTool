@@ -1,4 +1,4 @@
-package com.lte.mapmylte.mapper.www;
+package com.lte.mapmylte;
 
 import android.content.Intent;
 

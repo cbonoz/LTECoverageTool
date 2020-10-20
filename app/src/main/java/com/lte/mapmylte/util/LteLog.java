@@ -14,11 +14,11 @@
  * WHETHER OR NOT INJURY WAS SUSTAINED BY PERSONS OR PROPERTY OR OTHERWISE, AND WHETHER OR NOT LOSS WAS SUSTAINED FROM, OR AROSE OUT OF THE RESULTS OF,
  * OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
-package com.lte.mapmylte.mapper.www.util;
+package com.lte.mapmylte.util;
 
 import android.util.Log;
 
-import com.lte.mapmylte.mapper.www.BuildConfig;
+import com.lte.mapmylte.BuildConfig;
 
 public class LteLog {
 

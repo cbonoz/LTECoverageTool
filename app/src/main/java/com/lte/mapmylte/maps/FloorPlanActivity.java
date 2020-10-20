@@ -1,4 +1,4 @@
-package com.lte.mapmylte.mapper.www.maps;
+package com.lte.mapmylte.maps;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -16,7 +16,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.lte.mapmylte.mapper.www.R;
+import com.lte.mapmylte.R;
 import com.mapbox.geojson.Feature;
 import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.Point;
@@ -35,9 +35,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.lte.mapmylte.mapper.www.NewRecordingActivity;
-import com.lte.mapmylte.mapper.www.RecordActivity;
-import com.lte.mapmylte.mapper.www.util.LteLog;
+import com.lte.mapmylte.NewRecordingActivity;
+import com.lte.mapmylte.RecordActivity;
+import com.lte.mapmylte.util.LteLog;
 
 import static com.mapbox.mapboxsdk.style.layers.Property.NONE;
 import static com.mapbox.mapboxsdk.style.layers.Property.VISIBLE;
@@ -48,7 +48,7 @@ import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.iconIgnorePlacem
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.textAllowOverlap;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.textIgnorePlacement;
 import static com.mapbox.mapboxsdk.style.layers.PropertyFactory.visibility;
-import static com.lte.mapmylte.mapper.www.maps.MapMode.SEEN_FLOOR_OPTION;
+import static com.lte.mapmylte.maps.MapMode.SEEN_FLOOR_OPTION;
 
 /**
  * Tap the map in four locations to set the bounds for an image that is selected from the device's gallery

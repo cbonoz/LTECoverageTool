@@ -1,4 +1,4 @@
-package com.lte.mapmylte.mapper.www.maps;
+package com.lte.mapmylte.maps;
 
 public class MapMode {
 

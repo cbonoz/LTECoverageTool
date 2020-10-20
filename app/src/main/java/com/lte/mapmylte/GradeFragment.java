@@ -14,7 +14,7 @@
  * WHETHER OR NOT INJURY WAS SUSTAINED BY PERSONS OR PROPERTY OR OTHERWISE, AND WHETHER OR NOT LOSS WAS SUSTAINED FROM, OR AROSE OUT OF THE RESULTS OF,
  * OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
-package com.lte.mapmylte.mapper.www;
+package com.lte.mapmylte;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -41,7 +41,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import static com.mapbox.mapboxsdk.Mapbox.getApplicationContext;
-import static com.lte.mapmylte.mapper.www.util.GenericFileProvider.getExternalDataFile;
+import static com.lte.mapmylte.util.GenericFileProvider.getExternalDataFile;
 
 
 public class GradeFragment extends Fragment {

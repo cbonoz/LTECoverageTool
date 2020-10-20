@@ -14,7 +14,7 @@
  * WHETHER OR NOT INJURY WAS SUSTAINED BY PERSONS OR PROPERTY OR OTHERWISE, AND WHETHER OR NOT LOSS WAS SUSTAINED FROM, OR AROSE OUT OF THE RESULTS OF,
  * OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
-package com.lte.mapmylte.mapper.www;
+package com.lte.mapmylte;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -56,7 +56,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -65,7 +64,7 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.SettingsClient;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.lte.mapmylte.mapper.www.util.SignalGrade;
+import com.lte.mapmylte.util.SignalGrade;
 import com.mapbox.android.core.permissions.PermissionsManager;
 import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
@@ -101,19 +100,19 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.lte.mapmylte.mapper.www.util.LteLog;
-import com.lte.mapmylte.mapper.www.util.PrefManager;
+import com.lte.mapmylte.util.LteLog;
+import com.lte.mapmylte.util.PrefManager;
 
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.get;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.match;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.rgb;
 import static com.mapbox.mapboxsdk.style.expressions.Expression.stop;
-import static com.lte.mapmylte.mapper.www.maps.MapMode.FLOOR_OPTIONS;
-import static com.lte.mapmylte.mapper.www.maps.MapMode.GPS_OPTION;
-import static com.lte.mapmylte.mapper.www.maps.MapMode.SEEN_FLOOR_OPTION;
-import static com.lte.mapmylte.mapper.www.util.GenericFileProvider.getExternalDataFile;
-import static com.lte.mapmylte.mapper.www.maps.MapMode.getHumanReadableOption;
+import static com.lte.mapmylte.maps.MapMode.FLOOR_OPTIONS;
+import static com.lte.mapmylte.maps.MapMode.GPS_OPTION;
+import static com.lte.mapmylte.maps.MapMode.SEEN_FLOOR_OPTION;
+import static com.lte.mapmylte.util.GenericFileProvider.getExternalDataFile;
+import static com.lte.mapmylte.maps.MapMode.getHumanReadableOption;
 
 /*
  * Base activity for map-based signal strength recording.

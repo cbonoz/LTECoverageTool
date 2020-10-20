@@ -14,21 +14,21 @@
  * WHETHER OR NOT INJURY WAS SUSTAINED BY PERSONS OR PROPERTY OR OTHERWISE, AND WHETHER OR NOT LOSS WAS SUSTAINED FROM, OR AROSE OUT OF THE RESULTS OF,
  * OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
-package com.lte.mapmylte.mapper.www;
+package com.lte.mapmylte;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
 
-public class LiabilityNoticeActivity extends AppCompatActivity {
+public class UncertaintyNoticeActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_liability_notice);
+        setContentView(R.layout.activity_uncertainty_notice);
 
-        TextView textView = findViewById(R.id.activity_liability_notice_body_ui);
+        TextView textView = findViewById(R.id.activity_uncertainty_notice_body_ui);
         textView.setMovementMethod(new ScrollingMovementMethod());
     }
 }

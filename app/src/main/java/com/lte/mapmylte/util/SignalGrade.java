@@ -1,4 +1,4 @@
-package com.lte.mapmylte.mapper.www.util;
+package com.lte.mapmylte.util;
 
 public enum SignalGrade {
     TOP("top"),

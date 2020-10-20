@@ -14,11 +14,10 @@
  * WHETHER OR NOT INJURY WAS SUSTAINED BY PERSONS OR PROPERTY OR OTHERWISE, AND WHETHER OR NOT LOSS WAS SUSTAINED FROM, OR AROSE OUT OF THE RESULTS OF,
  * OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
-package com.lte.mapmylte.mapper.www;
+package com.lte.mapmylte;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -32,13 +31,13 @@ import android.widget.Toast;
 
 import java.util.Locale;
 
-import com.lte.mapmylte.mapper.www.maps.FloorPlanActivity;
-import com.lte.mapmylte.mapper.www.maps.GpsLineLayerActivity;
-import com.lte.mapmylte.mapper.www.util.LteLog;
+import com.lte.mapmylte.maps.FloorPlanActivity;
+import com.lte.mapmylte.maps.GpsLineLayerActivity;
+import com.lte.mapmylte.util.LteLog;
 
-import static com.lte.mapmylte.mapper.www.maps.MapMode.FLOOR_OPTION;
-import static com.lte.mapmylte.mapper.www.maps.MapMode.GPS_OPTION;
-import static com.lte.mapmylte.mapper.www.maps.MapMode.NO_GPS_OPTION;
+import static com.lte.mapmylte.maps.MapMode.FLOOR_OPTION;
+import static com.lte.mapmylte.maps.MapMode.GPS_OPTION;
+import static com.lte.mapmylte.maps.MapMode.NO_GPS_OPTION;
 /*
  * Resources:
  * https://docs.mapbox.com/android/maps/examples/create-a-line-layer/
