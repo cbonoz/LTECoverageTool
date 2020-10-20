@@ -21,10 +21,15 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -34,10 +39,15 @@ import java.util.Locale;
 import com.lte.mapmylte.maps.FloorPlanActivity;
 import com.lte.mapmylte.maps.GpsLineLayerActivity;
 import com.lte.mapmylte.util.LteLog;
+import com.revenuecat.purchases.Offerings;
+import com.revenuecat.purchases.Purchases;
+import com.revenuecat.purchases.PurchasesError;
+import com.revenuecat.purchases.interfaces.ReceiveOfferingsListener;
 
 import static com.lte.mapmylte.maps.MapMode.FLOOR_OPTION;
 import static com.lte.mapmylte.maps.MapMode.GPS_OPTION;
 import static com.lte.mapmylte.maps.MapMode.NO_GPS_OPTION;
+
 /*
  * Resources:
  * https://docs.mapbox.com/android/maps/examples/create-a-line-layer/
@@ -63,10 +73,47 @@ public class NewRecordingActivity extends AppCompatActivity {
     private String lastOptionSelected;
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.mainmenu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // action with ID action_refresh was selected
+            case R.id.action_upgrade:
+                Purchases.getSharedInstance().getOfferings(new ReceiveOfferingsListener() {
+                    @Override
+                    public void onReceived(@NonNull Offerings offerings) {
+                        Toast.makeText(NewRecordingActivity.this, "UPgrade selected: " + offerings, Toast.LENGTH_SHORT)
+                                .show();
+                    }
+
+                    @Override
+                    public void onError(@NonNull PurchasesError error) {
+                        /* Optional error handling */
+                        Toast.makeText(NewRecordingActivity.this, "Error getting offerings: " + error.getMessage(), Toast.LENGTH_SHORT)
+                                .show();
+                    }
+                });
+
+                break;
+            default:
+                break;
+        }
+
+        return true;
+    }
+
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_recording);
         setTitle(R.string.app_name);
+
 
         gpsButton = findViewById(R.id.gps_map_button);
         noGpsButton = findViewById(R.id.no_gps_map_button);

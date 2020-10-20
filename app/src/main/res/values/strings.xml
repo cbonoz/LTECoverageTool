@@ -143,6 +143,7 @@
     <string name="start">Start</string>
     <string name="what_s_this">What\'s This?</string>
     <string name="offest_info_message">Enter an offset value in dB if needed to raise the reported value for RSRP (intended for use where a device has a known trend for under-reporting measurements/quality).</string>
+    <string name="rev_sdk">cWeHHMMJcQgOOQGQvLThDKqKUTAfsuqm</string>
 
 
 </resources>

@@ -28,6 +28,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:9.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'com.revenuecat.purchases:purchases:3.5.3'
     implementation 'com.github.ViksaaSkool:AwesomeSplash:v1.0.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
     implementation 'com.yayandroid:LocationManager:2.2.0'
