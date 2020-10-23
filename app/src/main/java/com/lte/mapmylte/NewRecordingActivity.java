@@ -21,12 +21,6 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -34,15 +28,29 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.util.Locale;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.ConsumeParams;
+import com.android.billingclient.api.ConsumeResponseListener;
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchasesUpdatedListener;
+import com.android.billingclient.api.SkuDetails;
+import com.android.billingclient.api.SkuDetailsParams;
 import com.lte.mapmylte.maps.FloorPlanActivity;
 import com.lte.mapmylte.maps.GpsLineLayerActivity;
 import com.lte.mapmylte.util.LteLog;
-import com.revenuecat.purchases.Offerings;
-import com.revenuecat.purchases.Purchases;
-import com.revenuecat.purchases.PurchasesError;
-import com.revenuecat.purchases.interfaces.ReceiveOfferingsListener;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 import static com.lte.mapmylte.maps.MapMode.FLOOR_OPTION;
 import static com.lte.mapmylte.maps.MapMode.GPS_OPTION;
@@ -58,6 +66,7 @@ public class NewRecordingActivity extends AppCompatActivity {
 
     public static final String OFFSET_KEY = "offset_key";
     public static final String MAP_MODE_KEY = "map_mode_key";
+    public static final String ADVANCED_SENSORS_SKU = "advanced_sensors";
 
     private static final String TAG = NewRecordingActivity.class.getSimpleName();
     private static final int PERMISSION_REQUEST_ACCESS_COARSE_LOCATION = 1;
@@ -72,11 +81,56 @@ public class NewRecordingActivity extends AppCompatActivity {
 
     private String lastOptionSelected;
 
+    private PurchasesUpdatedListener purchaseUpdateListener = (billingResult, purchases) -> {
+        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
+                && purchases != null) {
+            for (Purchase purchase : purchases) {
+                handlePurchase(purchase);
+            }
+        } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
+            showToast("Purchase cancelled");
+            // Handle an error caused by a user cancelling the purchase flow.
+        } else {
+            showToast("Error completing purchase, please try again later or contact us for support");
+            // Handle any other error codes.
+        }
+        // To be implemented in a later section.
+    };
+
+    private void handlePurchase(Purchase purchase) {
+        // Verify the purchase.
+        // Ensure entitlement was not already granted for this purchaseToken.
+        // Grant entitlement to the user.
+
+        ConsumeParams consumeParams =
+                ConsumeParams.newBuilder()
+                        .setPurchaseToken(purchase.getPurchaseToken())
+                        .build();
+
+        ConsumeResponseListener listener = (billingResult, purchaseToken) -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                // Handle the success of the consume operation.
+                showToast("Purchase completed, token: " + purchaseToken);
+            }
+        };
+
+        billingClient.consumeAsync(consumeParams, listener);
+
+    }
+
+    private BillingClient billingClient;
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.mainmenu, menu);
+        // TODO readd
+//        MenuInflater inflater = getMenuInflater();
+//        inflater.inflate(R.menu.mainmenu, menu);
         return true;
+    }
+
+    private void showToast(String msg) {
+        Toast.makeText(NewRecordingActivity.this, msg, Toast.LENGTH_LONG)
+                .show();
     }
 
     @Override
@@ -84,21 +138,7 @@ public class NewRecordingActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             // action with ID action_refresh was selected
             case R.id.action_upgrade:
-                Purchases.getSharedInstance().getOfferings(new ReceiveOfferingsListener() {
-                    @Override
-                    public void onReceived(@NonNull Offerings offerings) {
-                        Toast.makeText(NewRecordingActivity.this, "UPgrade selected: " + offerings, Toast.LENGTH_SHORT)
-                                .show();
-                    }
-
-                    @Override
-                    public void onError(@NonNull PurchasesError error) {
-                        /* Optional error handling */
-                        Toast.makeText(NewRecordingActivity.this, "Error getting offerings: " + error.getMessage(), Toast.LENGTH_SHORT)
-                                .show();
-                    }
-                });
-
+                startBillingFlow();
                 break;
             default:
                 break;
@@ -107,12 +147,59 @@ public class NewRecordingActivity extends AppCompatActivity {
         return true;
     }
 
+    private Map<String, SkuDetails> skuMap;
+
+    private void startBillingFlow() {
+        SkuDetails skuDetails = skuMap.get(ADVANCED_SENSORS_SKU);
+        if (skuDetails == null) {
+            return;
+        }
+        // Retrieve a value for "skuDetails" by calling querySkuDetailsAsync().
+        BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
+                .setSkuDetails(skuDetails)
+                .build();
+        int responseCode = billingClient.launchBillingFlow(this, billingFlowParams).getResponseCode();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_recording);
         setTitle(R.string.app_name);
+
+        billingClient = BillingClient.newBuilder(this)
+                .setListener(purchaseUpdateListener)
+                .enablePendingPurchases()
+                .build();
+
+        skuMap = new HashMap<>();
+        skuMap.put(ADVANCED_SENSORS_SKU, null);
+
+
+        billingClient.startConnection(new BillingClientStateListener() {
+            @Override
+            public void onBillingSetupFinished(BillingResult result) {
+                if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    // The BillingClient is ready. You can query purchases here.
+                    SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
+                    params.setSkusList(new ArrayList<>(skuMap.keySet())).setType(BillingClient.SkuType.INAPP);
+                    billingClient.querySkuDetailsAsync(params.build(),
+                            (billingResult, skuDetailsList) -> {
+                                if (skuDetailsList != null) {
+                                    for (SkuDetails skuDetails : skuDetailsList) {
+                                        skuMap.put(skuDetails.getSku(), skuDetails);
+                                    }
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onBillingServiceDisconnected() {
+                // Try to restart the connection on the next request to
+                // Google Play by calling the startConnection() method.
+            }
+        });
 
 
         gpsButton = findViewById(R.id.gps_map_button);
