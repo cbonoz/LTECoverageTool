@@ -123,8 +123,8 @@ public class NewRecordingActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // TODO readd
-//        MenuInflater inflater = getMenuInflater();
-//        inflater.inflate(R.menu.mainmenu, menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.mainmenu, menu);
         return true;
     }
 
