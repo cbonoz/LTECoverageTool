@@ -10,6 +10,8 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="com.android.vending.BILLING" />
+    <uses-feature android:name="android.hardware.usb.host"
+        android:required="true"/>
 
     <application
         android:allowBackup="true"
@@ -62,6 +64,17 @@
             android:screenOrientation="portrait">
         </activity>
         <activity
+            android:name="com.lte.mapmylte.SensorActivity"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/device_filter" />
+        </activity>
+        <activity
             android:name="com.lte.mapmylte.DisplayResultsActivity"
             android:parentActivityName="com.lte.mapmylte.RecordActivity"
             android:screenOrientation="portrait">
@@ -96,6 +109,11 @@
         <activity android:name="com.lte.mapmylte.maps.GpsLineLayerActivity" />
         <activity android:name="com.lte.mapmylte.maps.FloorPlanActivity" />
         <activity android:name="com.lte.mapmylte.DisclaimerActivity" />
+
+        <service
+            android:name="com.lte.mapmylte.UsbService"
+            android:enabled="true">
+        </service>
     </application>
 
 </manifest>

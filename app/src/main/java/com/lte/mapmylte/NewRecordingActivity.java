@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -78,6 +79,7 @@ public class NewRecordingActivity extends AppCompatActivity {
     private Button noGpsButton;
     private Button floorPlanButton;
     private Button offsetInfoButton;
+    private Button sensorButton;
 
     private String lastOptionSelected;
 
@@ -205,12 +207,22 @@ public class NewRecordingActivity extends AppCompatActivity {
         gpsButton = findViewById(R.id.gps_map_button);
         noGpsButton = findViewById(R.id.no_gps_map_button);
         floorPlanButton = findViewById(R.id.floor_plan_map_button);
+        sensorButton = findViewById(R.id.sensor_button);
         offsetInfoButton = findViewById(R.id.offset_info_button);
 
         gpsButton.setOnClickListener(view -> newRecordingButtonClicked(GPS_OPTION));
         noGpsButton.setOnClickListener(view -> newRecordingButtonClicked(NO_GPS_OPTION));
         floorPlanButton.setOnClickListener(view -> newRecordingButtonClicked(FLOOR_OPTION));
         offsetInfoButton.setOnClickListener(view -> offsetInfoButtonClicked());
+        sensorButton.setOnClickListener(new View.OnClickListener(){
+
+                                            @Override
+                                            public void onClick(View v) {
+                                                Intent intent = new Intent(NewRecordingActivity.this, SensorActivity.class);
+                                                NewRecordingActivity.this.startActivity(intent);
+                                            }
+                                        }
+        );
 
         mOffsetUi = findViewById(R.id.activity_new_recording_offset_ui);
         mOffsetUi.setText(String.format(Locale.getDefault(), "%.1f", 0.0));

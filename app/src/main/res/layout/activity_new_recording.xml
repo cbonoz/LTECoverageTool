@@ -42,6 +42,11 @@
         android:layout_marginTop="15dp"
         android:text="Map my route with floor plan (no GPS)" />
 
+    <Button
+        android:id="@+id/sensor_button"
+        style="@style/FullButton"
+        android:layout_marginTop="15dp"
+        android:text="Additional Sensor" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
