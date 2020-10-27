@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:mapbox="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="196dp"
+    android:layout_height="220dp"
     android:keepScreenOn="true"
     android:orientation="horizontal"
     android:paddingStart="10dp"
@@ -98,6 +98,7 @@
             app:layout_constraintEnd_toStartOf="@+id/activity_record_offset_label_ui"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
+            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@+id/activity_record_data_points_text_ui" />
 
         <TextView
@@ -106,8 +107,21 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
             android:text="@string/activity_record_offset_label_text"
+            android:visibility="gone"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="10dp">
 
+            <TextView
+                android:id="@+id/sensor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Carbon Sensor (PPM)" />
+
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -172,6 +186,14 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Button" />
 
         </LinearLayout>
+        <TextView
+            android:id="@+id/sensor_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="6dp"
+            android:text="No Sensor Data"
+            android:textAppearance="@style/TextAppearance.AppCompat.Button" />
+
     </LinearLayout>
 
 

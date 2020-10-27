@@ -18,8 +18,12 @@ package com.lte.mapmylte;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -28,7 +32,10 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
+import android.os.Message;
 import android.telephony.CellIdentityLte;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
@@ -93,10 +100,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -120,7 +129,49 @@ import static com.lte.mapmylte.maps.MapMode.getHumanReadableOption;
 public abstract class RecordActivity extends AppCompatActivity implements LocationListener,
         OnMapReadyCallback {
 
+    /*
+     * Notifications from UsbService will be received here.
+     */
+    private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case UsbService.ACTION_USB_PERMISSION_GRANTED: // USB PERMISSION GRANTED
+                    Toast.makeText(context, "USB Ready", Toast.LENGTH_SHORT).show();
+                    break;
+                case UsbService.ACTION_USB_PERMISSION_NOT_GRANTED: // USB PERMISSION NOT GRANTED
+                    Toast.makeText(context, "USB Permission not granted", Toast.LENGTH_SHORT).show();
+                    break;
+                case UsbService.ACTION_NO_USB: // NO USB CONNECTED
+                    Toast.makeText(context, "No USB connected", Toast.LENGTH_SHORT).show();
+                    break;
+                case UsbService.ACTION_USB_DISCONNECTED: // USB DISCONNECTED
+                    Toast.makeText(context, "USB disconnected", Toast.LENGTH_SHORT).show();
+                    break;
+                case UsbService.ACTION_USB_NOT_SUPPORTED: // USB NOT SUPPORTED
+                    Toast.makeText(context, "USB device not supported", Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+    };
+    private UsbService usbService;
+    private RecordActivity.MyHandler mHandler;
+    private final ServiceConnection usbConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName arg0, IBinder arg1) {
+
+            usbService = ((UsbService.UsbBinder) arg1).getService();
+            usbService.setHandler(mHandler);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            usbService = null;
+        }
+    };
+
     public static final String DATA_READINGS_KEY = "data_readings_key";
+    public static final String SENSOR_READINGS_KEY = "sensor_readings_key";
     public static final String OFFSET_KEY = "offset_key";
 
     private static final String TAG = RecordActivity.class.getSimpleName();
@@ -156,7 +207,10 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     private double mOffset;
     private Timer mTimer;
     private List<DataReading> mDataReadings;
+    private TextView mSensorDataTxt;
     CollectionReference LTECollections;
+    CollectionReference SensorCollections;
+
     int count = 0;
 
     public JSONObject rawFeature;
@@ -186,6 +240,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     private void initFirestore() {
         mFirestore = FirebaseFirestore.getInstance();
         LTECollections = mFirestore.collection("LTECoordinates/" + Calendar.getInstance().getTime().toString() + "/LTE");
+        SensorCollections= mFirestore.collection("SensorCoordinates/" + Calendar.getInstance().getTime().toString() + "/Carbon");
     }
 
     protected void setCurrentFloor(int i) {
@@ -332,6 +387,8 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
         initFirestore();
         initRouteCoordinates();
 
+        mHandler = new RecordActivity.MyHandler(this);
+
         prefManager = new PrefManager(this);
         provider = mapMode.equals(GPS_OPTION) ? LocationManager.GPS_PROVIDER : LocationManager.NETWORK_PROVIDER;
         setTitle(getHumanReadableOption(mapMode));
@@ -362,7 +419,7 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
         mDataPointsText = findViewById(R.id.activity_record_data_points_text_ui);
         mOffsetText = findViewById(R.id.activity_record_offset_text_ui);
         mSignalStrengthText = findViewById(R.id.activity_record_signal_strength_text_ui);
-
+        mSensorDataTxt = findViewById(R.id.sensor_data);
         // Make part of text clickable.
         ClickableSpan clickableSpan = new ClickableSpan() {
 
@@ -560,14 +617,19 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
 
     }
 
+
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
+        setFilters();  // Start listening notifications from UsbService
+        startService(UsbService.class, usbConnection, null); // Start UsbService(if it was not started before) and Bind it
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
+        unregisterReceiver(mUsbReceiver);
+        unbindService(usbConnection);
         LteLog.i("record", "on pause");
     }
 
@@ -607,10 +669,13 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
     }
 
     public void stopButtonClicked(View view) {
-        for(int i = 0; i < mDataReadings.size(); i++)
-        {
+        for (int i = 0; i < mDataReadings.size(); i++) {
             LTECollections.add(mDataReadings.get(i));
         }
+        for (int i = 0; i < mHandler.mDataReadings.size(); i++) {
+            SensorCollections.add(mHandler.mDataReadings.get(i));
+        }
+
         Intent intent = new Intent(this, DisplayResultsActivity.class);
         intent.putExtra(DATA_READINGS_KEY, (ArrayList<DataReading>) mDataReadings);
         intent.putExtra(OFFSET_KEY, mOffset);
@@ -671,6 +736,16 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
         settingsClient.checkLocationSettings(locationSettingsRequest);
 
         // new Google API SDK v11 uses getFusedLocationProviderClient(this)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, new LocationCallback() {
                     @Override
                     public void onLocationResult(LocationResult locationResult) {
@@ -951,4 +1026,101 @@ public abstract class RecordActivity extends AppCompatActivity implements Locati
         }
     }
 
+
+    private void startService(Class<?> service, ServiceConnection serviceConnection, Bundle extras) {
+        if (!UsbService.SERVICE_CONNECTED) {
+            Intent startService = new Intent(this, service);
+            if (extras != null && !extras.isEmpty()) {
+                Set<String> keys = extras.keySet();
+                for (String key : keys) {
+                    String extra = extras.getString(key);
+                    startService.putExtra(key, extra);
+                }
+            }
+            startService(startService);
+        }
+        Intent bindingIntent = new Intent(this, service);
+        bindService(bindingIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private void setFilters() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(UsbService.ACTION_USB_PERMISSION_GRANTED);
+        filter.addAction(UsbService.ACTION_NO_USB);
+        filter.addAction(UsbService.ACTION_USB_DISCONNECTED);
+        filter.addAction(UsbService.ACTION_USB_NOT_SUPPORTED);
+        filter.addAction(UsbService.ACTION_USB_PERMISSION_NOT_GRANTED);
+        registerReceiver(mUsbReceiver, filter);
+    }
+
+    /*
+     * This handler will be passed to UsbService. Data received from serial port is displayed through this handler
+     */
+    private static class MyHandler extends Handler {
+        private final WeakReference<RecordActivity> mActivity;
+        private final RecordActivity mActivityValue;
+        public String partial = "";
+        public String mUSBData = "";
+        public List<DataReading> mDataReadings = new ArrayList<DataReading>();
+
+        public MyHandler(RecordActivity activity) {
+            mActivity = new WeakReference<>(activity);
+            mActivityValue = activity;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case UsbService.MESSAGE_FROM_SERIAL_PORT:
+                    String data = (String) msg.obj;
+
+                    if(data.contains("\n"))
+                    {
+                        partial += data.replace("\n", "");
+                        mUSBData = partial + " ppm";
+                        mActivityValue.mSensorDataTxt.setText(mUSBData);
+                        partial = "";
+
+                    }
+                    else
+                    {
+                        partial += data;
+                        return;
+                    }
+
+                    if(mUSBData != data) {
+                        mUSBData = data;
+                        if(tryParseDouble(data))
+                        {
+                            if(mActivityValue.lastLat != 0 && mActivityValue.lastLng != 0) {
+                                DataReading mCurrentReading = new DataReading();
+                                mCurrentReading.setLat(mActivityValue.lastLat);
+                                mCurrentReading.setLng(mActivityValue.lastLng);
+                                mCurrentReading.setAcc(mActivityValue.lastAcc);
+                                mCurrentReading.setElevation(mActivityValue.lastElevation);
+                                mCurrentReading.setSensorvalue(Double.valueOf(data));
+                                mCurrentReading.setUsesensor(true);
+                                mDataReadings.add(mCurrentReading);
+                            }
+                        }
+                    }
+                    break;
+                case UsbService.CTS_CHANGE:
+                    Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();
+                    break;
+                case UsbService.DSR_CHANGE:
+                    Toast.makeText(mActivity.get(), "DSR_CHANGE",Toast.LENGTH_LONG).show();
+                    break;
+            }
+        }
+
+        boolean tryParseDouble(String value) {
+            try {
+                Double.parseDouble(value);
+                return true;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+    }
 }

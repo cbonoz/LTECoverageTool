@@ -40,6 +40,10 @@ class DataReading implements Serializable {
     private double elevation;
     private double acc;
     private int floor;
+    private boolean usesensor;
+    private double sensorvalue;
+    private String sensortype;
+    private String sensorMetric;
 
     DataReading() {
         this.floor = -1;
@@ -51,6 +55,10 @@ class DataReading implements Serializable {
         this.lat = -1;
         this.lng = -1;
         this.elevation = -1;
+        this.usesensor = false;
+        this.sensorvalue = -1;
+        this.sensortype = "Carbon";
+        this.sensorMetric = "ppm";
     }
 
     DataReading(DataReading dataReading) {
@@ -62,6 +70,10 @@ class DataReading implements Serializable {
         this.lat = dataReading.lat;
         this.elevation = dataReading.elevation;
         this.floor = dataReading.floor;
+        this.usesensor = dataReading.usesensor;
+        this.sensorvalue = dataReading.sensorvalue;
+        this.sensortype = dataReading.sensortype;
+        this.sensorMetric = dataReading.sensorMetric;
     }
 
     Date getTimestamp() {
@@ -132,8 +144,44 @@ class DataReading implements Serializable {
         this.floor = floor;
     }
 
+
+
+    public boolean isUsesensor() {
+        return usesensor;
+    }
+
+    public void setUsesensor(boolean usesensor) {
+        this.usesensor = usesensor;
+    }
+
+    public double getSensorvalue() {
+        return sensorvalue;
+    }
+
+    public void setSensorvalue(double sensorvalue) {
+        this.sensorvalue = sensorvalue;
+    }
+
+
+    public String getSensortype() {
+        return sensortype;
+    }
+
+    public void setSensortype(String sensortype) {
+        this.sensortype = sensortype;
+    }
+
+
+    public String getSensorMetric() {
+        return sensorMetric;
+    }
+
+    public void setSensorMetric(String sensorMetric) {
+        this.sensorMetric = sensorMetric;
+    }
+
     public String getCsvString() {
-        return String.format(Locale.US, "\"%s\",\"%d\",\"%d\",\"%f\",\"%f\",\"%f\",\"%f\",\"%s\",\"%s\"%n",
+        return String.format(Locale.US, "\"%s\",\"%d\",\"%d\",\"%f\",\"%f\",\"%f\",\"%f\",\"%s\",\"%s\"%n,\"%b\",\"%f\",%s,%s",
                 DateFormat.getDateTimeInstance().format(getTimestamp()),
                 getRsrp(),
                 getRsrq(),
@@ -142,6 +190,10 @@ class DataReading implements Serializable {
                 getElevation(),
                 getAcc(),
                 getPci() == -1 ? "N/A" : getPci() + "",
-                getFloor() == -1 ? "N/A" : getFloor() + "");
+                getFloor() == -1 ? "N/A" : getFloor() + "",
+                isUsesensor(),
+                getSensorvalue(),
+                getSensortype(),
+                getSensorMetric());
     }
 }
