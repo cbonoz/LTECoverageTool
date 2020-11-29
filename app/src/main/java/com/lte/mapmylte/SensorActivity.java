@@ -23,13 +23,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -87,18 +84,14 @@ public class SensorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sensor);
         mHandler = new MyHandler(this);
-
-        display = (TextView) findViewById(R.id.textView1);
-
+        display = findViewById(R.id.textView1);
     }
-
 
 
     @Override
     public void onResume() {
         super.onResume();
-        setFilters();  // Start listening notifications from UsbService
-        startService(UsbService.class, usbConnection, null); // Start UsbService(if it was not started before) and Bind it
+        startUsbFilters();  // Start listening notifications from UsbService
     }
 
     @Override
@@ -124,7 +117,7 @@ public class SensorActivity extends AppCompatActivity {
         bindService(bindingIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
-    private void setFilters() {
+    private void startUsbFilters() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(UsbService.ACTION_USB_PERMISSION_GRANTED);
         filter.addAction(UsbService.ACTION_NO_USB);
@@ -132,6 +125,7 @@ public class SensorActivity extends AppCompatActivity {
         filter.addAction(UsbService.ACTION_USB_NOT_SUPPORTED);
         filter.addAction(UsbService.ACTION_USB_PERMISSION_NOT_GRANTED);
         registerReceiver(mUsbReceiver, filter);
+        startService(UsbService.class, usbConnection, null); // Start UsbService(if it was not started before) and Bind it
     }
 
     /*
@@ -152,10 +146,10 @@ public class SensorActivity extends AppCompatActivity {
                     mActivity.get().display.append(data);
                     break;
                 case UsbService.CTS_CHANGE:
-                    Toast.makeText(mActivity.get(), "CTS_CHANGE",Toast.LENGTH_LONG).show();
+                    Toast.makeText(mActivity.get(), "CTS_CHANGE", Toast.LENGTH_LONG).show();
                     break;
                 case UsbService.DSR_CHANGE:
-                    Toast.makeText(mActivity.get(), "DSR_CHANGE",Toast.LENGTH_LONG).show();
+                    Toast.makeText(mActivity.get(), "DSR_CHANGE", Toast.LENGTH_LONG).show();
                     break;
             }
         }

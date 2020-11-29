@@ -30,6 +30,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -41,15 +42,19 @@ import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.ConsumeParams;
 import com.android.billingclient.api.ConsumeResponseListener;
 import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.PurchaseHistoryRecord;
+import com.android.billingclient.api.PurchaseHistoryResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
+import com.android.billingclient.api.SkuDetailsResponseListener;
 import com.lte.mapmylte.maps.FloorPlanActivity;
 import com.lte.mapmylte.maps.GpsLineLayerActivity;
 import com.lte.mapmylte.util.LteLog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -67,6 +72,7 @@ public class NewRecordingActivity extends AppCompatActivity {
 
     public static final String OFFSET_KEY = "offset_key";
     public static final String MAP_MODE_KEY = "map_mode_key";
+    public static final String HAS_SENSORS = "has_sensors";
     public static final String ADVANCED_SENSORS_SKU = "advanced_sensors";
 
     private static final String TAG = NewRecordingActivity.class.getSimpleName();
@@ -82,6 +88,7 @@ public class NewRecordingActivity extends AppCompatActivity {
     private Button sensorButton;
 
     private String lastOptionSelected;
+    private boolean purchasesLoaded = false;
 
     private PurchasesUpdatedListener purchaseUpdateListener = (billingResult, purchases) -> {
         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
@@ -113,20 +120,27 @@ public class NewRecordingActivity extends AppCompatActivity {
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                 // Handle the success of the consume operation.
                 showToast("Purchase completed, token: " + purchaseToken);
+                purchaseMap.put(purchase.getSku(), purchaseToken);
+                if (purchase.getSku().equals(ADVANCED_SENSORS_SKU)) {
+                    // Update options header to show premium.
+                    invalidateOptionsMenu();
+                }
             }
         };
 
         billingClient.consumeAsync(consumeParams, listener);
-
     }
 
     private BillingClient billingClient;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // TODO readd
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.mainmenu, menu);
+        if (purchasesLoaded) {
+            // Inflate menu once purchases ready.
+            MenuInflater inflater = getMenuInflater();
+            inflater.inflate(R.menu.mainmenu, menu);
+            menu.getItem(0).setTitle(purchaseMap.containsKey(ADVANCED_SENSORS_SKU) ? getString(R.string.premium) : getString(R.string.upgrade));
+        }
         return true;
     }
 
@@ -140,7 +154,11 @@ public class NewRecordingActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             // action with ID action_refresh was selected
             case R.id.action_upgrade:
-                startBillingFlow();
+                if (purchaseMap.containsKey(ADVANCED_SENSORS_SKU)) {
+                    Toast.makeText(this, "You are on the advanced sensor plan.", Toast.LENGTH_SHORT).show();
+                } else {
+                    startBillingFlow();
+                }
                 break;
             default:
                 break;
@@ -150,6 +168,7 @@ public class NewRecordingActivity extends AppCompatActivity {
     }
 
     private Map<String, SkuDetails> skuMap;
+    private Map<String, String> purchaseMap;
 
     private void startBillingFlow() {
         SkuDetails skuDetails = skuMap.get(ADVANCED_SENSORS_SKU);
@@ -177,6 +196,8 @@ public class NewRecordingActivity extends AppCompatActivity {
         skuMap = new HashMap<>();
         skuMap.put(ADVANCED_SENSORS_SKU, null);
 
+        purchaseMap = new HashMap<>();
+
 
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
@@ -185,6 +206,20 @@ public class NewRecordingActivity extends AppCompatActivity {
                     // The BillingClient is ready. You can query purchases here.
                     SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
                     params.setSkusList(new ArrayList<>(skuMap.keySet())).setType(BillingClient.SkuType.INAPP);
+
+                    billingClient.queryPurchaseHistoryAsync("inapp", (billingResult, records) -> {
+                        if (records != null) {
+                            for (PurchaseHistoryRecord record : records) {
+                                purchaseMap.put(record.getSku(), record.getPurchaseToken());
+                            }
+
+                        }
+                        purchasesLoaded = true;
+                        if (purchaseMap.containsKey(ADVANCED_SENSORS_SKU)) {
+                            invalidateOptionsMenu();
+                        }
+                    });
+
                     billingClient.querySkuDetailsAsync(params.build(),
                             (billingResult, skuDetailsList) -> {
                                 if (skuDetailsList != null) {
@@ -203,7 +238,6 @@ public class NewRecordingActivity extends AppCompatActivity {
             }
         });
 
-
         gpsButton = findViewById(R.id.gps_map_button);
         noGpsButton = findViewById(R.id.no_gps_map_button);
         floorPlanButton = findViewById(R.id.floor_plan_map_button);
@@ -214,14 +248,14 @@ public class NewRecordingActivity extends AppCompatActivity {
         noGpsButton.setOnClickListener(view -> newRecordingButtonClicked(NO_GPS_OPTION));
         floorPlanButton.setOnClickListener(view -> newRecordingButtonClicked(FLOOR_OPTION));
         offsetInfoButton.setOnClickListener(view -> offsetInfoButtonClicked());
-        sensorButton.setOnClickListener(new View.OnClickListener(){
-
-                                            @Override
-                                            public void onClick(View v) {
-                                                Intent intent = new Intent(NewRecordingActivity.this, SensorActivity.class);
-                                                NewRecordingActivity.this.startActivity(intent);
-                                            }
-                                        }
+        sensorButton.setOnClickListener(v -> {
+                    if (purchaseMap.containsKey(ADVANCED_SENSORS_SKU)) {
+                        Intent intent = new Intent(NewRecordingActivity.this, SensorActivity.class);
+                        NewRecordingActivity.this.startActivity(intent);
+                    } else {
+                        Toast.makeText(NewRecordingActivity.this, "Upgrade to use advanced sensor recording.", Toast.LENGTH_LONG).show();
+                    }
+                }
         );
 
         mOffsetUi = findViewById(R.id.activity_new_recording_offset_ui);
@@ -229,6 +263,12 @@ public class NewRecordingActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_ACCESS_COARSE_LOCATION);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
     }
 
     public void newRecordingButtonClicked(String option) {
@@ -250,7 +290,8 @@ public class NewRecordingActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_REQUEST_ACCESS_COARSE_LOCATION_START_ACTIVITY && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             startRecordingActivity();
         }
@@ -287,6 +328,7 @@ public class NewRecordingActivity extends AppCompatActivity {
 
         intent.putExtra(OFFSET_KEY, offset);
         intent.putExtra(MAP_MODE_KEY, lastOptionSelected);
+        intent.putExtra(HAS_SENSORS, purchaseMap.containsKey(ADVANCED_SENSORS_SKU));
         startActivity(intent);
     }
 }

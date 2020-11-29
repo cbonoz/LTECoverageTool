@@ -6,8 +6,8 @@ android {
         applicationId "com.lte.mapmylte"
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 4
+        versionName "1.0.2"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
